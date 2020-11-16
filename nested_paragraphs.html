@@ -126,6 +126,15 @@ d3.json("/nested_paragraphs/Austen_PrideAndPrejudice_nested_paragraphs.json").th
 
 /*RENDERING PORTION*//////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////
+   let xScale = d3.scaleBand()
+        .domain([0, nestedData.length])
+        .range([0, plotVars.plotWidth]);
+   
+   // Function to scale each bar relative to the max height of the chart.
+   let yScale = d3.scaleLinear()
+        .domain([0, 80]) //max found via script
+        .range([0, plotVars.plotHeight]);
+        
    let svgContainer = d3.select("body").append("svg")
       .attr("width", plotVars.plotWidth)
       .attr("height", plotVars.plotHeight)
@@ -141,19 +150,20 @@ d3.json("/nested_paragraphs/Austen_PrideAndPrejudice_nested_paragraphs.json").th
             .enter()
             .append('rect')
             .attr('x', function(paragraph, parInd) { 
-               return parInd*30; 
+               return chapterInd*10; 
             })
-            .attr('y', function() { 
-               return chapterInd*12; 
+            .attr('y', function(paragraph, parInd) { 
+               return yScale(parInd);
+               //return parInd*12; 
             })
-            .attr('width', function(paragraph) { 
-               paragraphSize = paragraph.length * 0.03;
-               return paragraphSize; 
+            .attr('height', function(paragraph) { 
+               paragraphSize = paragraph.length * 0.02;
+               return paragraphSize;    
             })
-            .attr('height', function() { 
-               return 7; 
+            .attr('width', function(paragraph) { //vertical length of paragraph
+               return 5;
             })
-            .attr('fill', "red")
+            .attr('fill', "teal")
          });
   
 
