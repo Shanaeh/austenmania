@@ -40,9 +40,9 @@ d3.json("/nested_paragraphs/Austen_PrideAndPrejudice_nested_paragraphs.json").th
 /*BASIC SET-UP*//////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////
    const plotVars = ({
-      plotWidth: 860,   // Width of plot region
-      plotHeight: 800,  // Height of plot region
-      plotMargin: 60,   // Margin space for axes and their labels
+      plotWidth: 1060,   // Width of plot region
+      plotHeight: 1000,  // Height of plot region
+      plotMargin: 30,   // Margin space for axes and their labels
       plotMarginRight: 100   // Margin space for axes and their labels
    });
 
@@ -126,16 +126,17 @@ d3.json("/nested_paragraphs/Austen_PrideAndPrejudice_nested_paragraphs.json").th
 
 /*RENDERING PORTION*//////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////
-   let xScale = d3.scaleBand()
+   let xScale = d3.scaleLinear()
         .domain([0, nestedData.length])
-        .range([0, plotVars.plotWidth]);
+        .range([0, plotVars.plotWidth])
    
    // Function to scale each bar relative to the max height of the chart.
    let yScale = d3.scaleLinear()
         .domain([0, 80]) //max found via script
-        .range([0, plotVars.plotHeight]);
+        .range([plotVars.plotMargin, plotVars.plotHeight - plotVars.plotMargin]);
         
-   let svgContainer = d3.select("body").append("svg")
+   let svgContainer = d3.select("body")
+      .append("svg")
       .attr("width", plotVars.plotWidth)
       .attr("height", plotVars.plotHeight)
       .style("background-color", "whitesmoke");
@@ -144,32 +145,27 @@ d3.json("/nested_paragraphs/Austen_PrideAndPrejudice_nested_paragraphs.json").th
          .data(nestedData)
          .enter()
          .append('g')
-         .each(function(d,chapterInd) {
+         .each(function(d, chapterInd) {
             d3.select(this).selectAll('rect')
             .data(d.paragraphs)
             .enter()
             .append('rect')
-            .attr('x', function(paragraph, parInd) { 
-               return chapterInd*10; 
+            .attr('x', function() { 
+               return xScale(chapterInd); 
             })
             .attr('y', function(paragraph, parInd) { 
                return yScale(parInd);
-               //return parInd*12; 
             })
             .attr('height', function(paragraph) { 
-               paragraphSize = paragraph.length * 0.02;
+               paragraphSize = paragraph.length * 0.0033;
                return paragraphSize;    
             })
-            .attr('width', function(paragraph) { //vertical length of paragraph
-               return 5;
+            .attr('width', function(paragraph, parInd) { //vertical length of paragraph
+               return 14;
             })
-            .attr('fill', "teal")
+            .attr('fill', "blue")
          });
-  
-
-
-
-
+      
 });
 
 </script>
