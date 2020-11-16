@@ -41,7 +41,7 @@ d3.json("/nested_paragraphs/Austen_PrideAndPrejudice_nested_paragraphs.json").th
 ///////////////////////////////////////////////////////////////////////////
    const plotVars = ({
       plotWidth: 860,   // Width of plot region
-      plotHeight: 600,  // Height of plot region
+      plotHeight: 800,  // Height of plot region
       plotMargin: 60,   // Margin space for axes and their labels
       plotMarginRight: 100   // Margin space for axes and their labels
    });
@@ -135,33 +135,26 @@ d3.json("/nested_paragraphs/Austen_PrideAndPrejudice_nested_paragraphs.json").th
          .data(nestedData)
          .enter()
          .append('g')
-         .each(function(d,i) {
+         .each(function(d,chapterInd) {
             d3.select(this).selectAll('rect')
             .data(d.paragraphs)
             .enter()
             .append('rect')
-            .attr('x', function(d,j) { return j*15; })
-            .attr('y', function() { return i*15; })
-            .attr('width', function() { return 10; })
-            .attr('height', function() { return 10; })
+            .attr('x', function(paragraph, parInd) { 
+               return parInd*30; 
+            })
+            .attr('y', function() { 
+               return chapterInd*12; 
+            })
+            .attr('width', function(paragraph) { 
+               paragraphSize = paragraph.length * 0.03;
+               return paragraphSize; 
+            })
+            .attr('height', function() { 
+               return 7; 
+            })
             .attr('fill', "red")
          });
-
-         // svgContainer.selectAll('rect')
-         // .data(data)
-         // .enter()
-         // .append('g')
-         // .each(function(d,i) {
-         //    d3.select(this).selectAll('rect')
-         //    .data(d.data)
-         //    .enter()
-         //    .append('rect')
-         //    .attr('x', function(d,j) { return j*100; })
-         //    .attr('y', function() { return i*100; })
-         //    .attr('width', function() { return 90; })
-         //    .attr('height', function() { return 90; })
-         //    .attr('fill', "red")
-         // });
   
 
 
