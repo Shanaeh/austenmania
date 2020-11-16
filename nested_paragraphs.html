@@ -24,15 +24,24 @@
 </style>
 
 <body>
-   
+<div>
+   <h3>austenmania</h3>
+</div>
 <script src="https://d3js.org/d3.v6.min.js"></script>
 
+<input type="text" value="marriage" id="keywordSearch">
+<button type="button" id="keywordSearchButton" onclick="searchKeywordOnClick()">Search for a term</button>
 <script>
 
+   ////*HTML button helper, outside d3 file sharing*////
+   let selectedKeyword = keywordSearch.value;
+   function searchKeywordOnClick() {
+      selectedKeyword = keywordSearch.value;
+   }
+
 d3.json("/nested_paragraphs/Austen_PrideAndPrejudice_nested_paragraphs.json").then(function(nestedData) { 
-  
-/*BASIC SET-UP*//////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////
+////*Set-up, constants, and functions*////
+
    const plotVars = ({
       plotWidth: 1060,   // Width of plot region
       plotHeight: 1000,  // Height of plot region
@@ -40,76 +49,48 @@ d3.json("/nested_paragraphs/Austen_PrideAndPrejudice_nested_paragraphs.json").th
       plotMarginLeft: 60   // Margin space for axes and their labels
    });
 
-   // let lineGenerator = d3.line()
-   //    .x(d => xScale(new Date(d.year_month))/* Fill in */) // year_month should go on the x-axis, and apparently need to turn into new Date for functionality
-   //    .y(d => yScale(d.screen_time_seconds)/* Fill in */); // screen_time_seconds should go on the y-axis
+   let keywordSearch = document.getElementById("keywordSearch");
+      // Execute a function when the user releases a key on the keyboard
+   keywordSearch.addEventListener("keyup", function(event) {
+   // Number 13 is the "Enter" key on the keyboard
+   if (event.keyCode === 13) {
+      // Cancel the default action, if needed
+      console.log(keywordSearch.value);
+      event.preventDefault();
+      // Trigger the button element with a click
+      document.getElementById("keywordSearchButton").click();
+   }
+   });
 
-   // function drawLines(top100Data, plotContainer) {
-   //    plotContainer.append("g")
-   //       .selectAll("path")
-   //       .data(top100Data)
-   //       .join("path")
-   //       .attr("class", "data-line")               // Class name to be able to access the lines later
-   //       .attr("stroke-width", 0.8)
-   //       .attr("d", d => lineGenerator(d.values))  // Use lineGenerator on d.values
-   //       .attr("fill", "none")                     // Do not fill the area defined by the path
-   //       .attr("stroke", d => "gray");   // Set a color for the line (The maps for color is in 'color')
-   //    };
+   d3.select("#keywordSearchButton").on("click", function() {
+         console.log(selectedKeyword);
 
-   // function drawNames(top100Data, plotContainer) {
-   //    plotContainer.append("g")
-   //       .selectAll("text.label")
-   //       .data(top100Data)
-   //       .join("text")
-   //       .attr("class", "data-label")
-   //       .attr('x', plotVars.plotWidth - plotVars.plotMarginRight + 3)
-   //       // Place the ticks at the same y position as
-   //       // the last y value of the line (remember, d.va;ues is our array of points)
-   //       .attr('y', d => yScale(d.values[d.values.length - 1].screen_time_seconds))
-   //       .attr('dy', '0.35em')
-   //       .style('fill', d => "gray")
-   //       .style('font-family', 'sans-serif')
-   //       .style('font-size', 12)
-   //       .text(d => d.person)
-   // };
-   //    plotContainer.append("text")      // text label for the x axis
-   //       .attr("x", plotVars.plotWidth / 2 )
-   //       .attr("y", plotVars.plotHeight - plotVars.plotMargin/3)
-   //       .style('font-family', 'sans-serif')
-   //       .style('font-size', 14)
-   //       .style("text-anchor", "middle")
-   //       .text("Date (in Year-Months)");
+         //add more stuff to change
+   });
 
-   //    plotContainer.append('g')
-   //       .attr('class', 'y-axis')
-   //       .attr('transform', `translate(${ plotVars.plotMargin},0)`)
-   //       .call(yAxis);
-      
-   //    plotContainer.append("text")
-   //       .attr("y", plotVars.plotHeight / 2 )
-   //       .attr("x", 20)
-   //       .attr("style", "writing-mode: tb; glyph-orientation-vertical: 90")
-   //       .attr("dy", "1em")
-   //       .style('font-family', 'sans-serif')
-   //       .style('font-size', 14)
-   //       .style("text-anchor", "middle")
-   //       .text("Screen Time (in Seconds)");
-   // };
-   
-   // yAxis = d3.axisLeft(yScale)
-   //       .tickFormat(d => d3.format('~s')(d));
-   // //const formatter = d3.format('~s'); //https://github.com/d3/d3-format/blob/v1.4.2/README.md#locale_format
+   const numChapters = nestedData.length;
+   function getMaxNumParagraphs() {
+      let maxParagraphs = 0;
+      for(let i=0; i < numChapters; i++) {
+         const numParagraphs = nestedData[i].paragraphs.length;
+         if(maxParagraphs < numParagraphs) {
+            maxParagraphs = numParagraphs;
+         }
+      }
+      return maxParagraphs;
+   }
+   const maxNumParagraphs = getMaxNumParagraphs();
 
-/*RENDERING PORTION*//////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////
    let xScale = d3.scaleLinear()
         .domain([0, nestedData.length])
         .range([plotVars.plotMarginLeft, plotVars.plotWidth])
-   
+
    let yScale = d3.scaleLinear()
-        .domain([0, 80]) //max val found via corpus script, choice to keep max value consistent across different novels
+        .domain([0, maxNumParagraphs]) ////103 wanted consistency for comparison across different novels, 103 is the max
         .range([plotVars.plotMargin, plotVars.plotHeight - plotVars.plotMargin]);
-        
+  
+/*RENDERING PORTION*//////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////
    let svgContainer = d3.select("body")
       .append("svg")
       .attr("width", plotVars.plotWidth)
@@ -155,7 +136,7 @@ d3.json("/nested_paragraphs/Austen_PrideAndPrejudice_nested_paragraphs.json").th
          .attr('y', plotVars.plotMargin - 4)
          .style('fill', "black")
          .style('font-family', 'Georgia')
-         .style('font-size', 12)
+         .style('font-size', 13)
          .text(d => d.chapter);
    
 ////*Static tick-making and explainers*/////
@@ -191,6 +172,5 @@ d3.json("/nested_paragraphs/Austen_PrideAndPrejudice_nested_paragraphs.json").th
 
 </script>
 
-<div>
-   <h3>austenmania</h3>
-</div>
+</body>
+</html>

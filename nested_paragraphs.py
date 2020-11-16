@@ -54,6 +54,6 @@ def get_nested_paragraphs(filename):
 #    with open(filename[:-4] + "_nested_paragraphs.json", "w") as outfile:
 #       json.dump(nested_paragraphs, fp=outfile, sort_keys=True, indent=4)
 
-#get_nested_paragraphs("Austen_Persuasion.txt")
-get_nested_paragraphs("Austen_PrideAndPrejudice.txt")
+get_nested_paragraphs("Austen_Persuasion.txt")
+#get_nested_paragraphs("Austen_PrideAndPrejudice.txt")
 
