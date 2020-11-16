@@ -28,6 +28,7 @@ def get_nested_paragraphs(filename):
                curr_chapter_index += 1
             else:
                curr_chapter["paragraphs"].append(paragraph)
+      nested_paragraphs.append(curr_chapter) #off by 1
 
    with open(filename[:-4] + "_nested_paragraphs.json", "w") as outfile:
       json.dump(nested_paragraphs, fp=outfile, sort_keys=True, indent=4)

@@ -21,12 +21,6 @@
   shape-rendering: crispEdges;
 }
 
-
-.brush .selection {
-	stroke: #000;
-	fill: rgb(255, 123, 0);
-}
-
 </style>
 
 <body>
@@ -43,17 +37,8 @@ d3.json("/nested_paragraphs/Austen_PrideAndPrejudice_nested_paragraphs.json").th
       plotWidth: 1060,   // Width of plot region
       plotHeight: 1000,  // Height of plot region
       plotMargin: 30,   // Margin space for axes and their labels
-      plotMarginRight: 100   // Margin space for axes and their labels
+      plotMarginLeft: 60   // Margin space for axes and their labels
    });
-
-   // let xScale = d3.scaleTime()
-   //    //.domain([new Date("2010-01-01 00:00:00"), new Date("2020-07-1 00:00:00")])
-   //    .domain([new Date('2010-01-01T00:00'), new Date('2020-07-01T00:00')])//d3.extent(top100RawData, d => d.year_month))
-   //    .range([plotVars.plotMargin, plotVars.plotWidth - plotVars.plotMarginRight]/* Using 0 to max width */);
-
-   // let yScale = d3.scaleLinear()
-   //    .domain([0, 393450])//d3.max(top100RawData, function(d) { return Math.max(d.screen_time_seconds); })]) //We want the max of the screen time in seconds, and we want to start off with 0
-   //    .range([plotVars.plotMargin, plotVars.plotHeight - plotVars.plotMargin].reverse()); // 0 to max height, and don't forget to flip as the origin of the SVG is at top, left
 
    // let lineGenerator = d3.line()
    //    .x(d => xScale(new Date(d.year_month))/* Fill in */) // year_month should go on the x-axis, and apparently need to turn into new Date for functionality
@@ -87,13 +72,6 @@ d3.json("/nested_paragraphs/Austen_PrideAndPrejudice_nested_paragraphs.json").th
    //       .style('font-size', 12)
    //       .text(d => d.person)
    // };
-
-   // function drawTicks(plotContainer) {
-   //    plotContainer.append('g')
-   //       .attr('class', 'x-axis')
-   //       .attr('transform', `translate(0,${ plotVars.plotHeight - plotVars.plotMargin })`)
-   //       .call(xAxis);
-      
    //    plotContainer.append("text")      // text label for the x axis
    //       .attr("x", plotVars.plotWidth / 2 )
    //       .attr("y", plotVars.plotHeight - plotVars.plotMargin/3)
@@ -117,8 +95,6 @@ d3.json("/nested_paragraphs/Austen_PrideAndPrejudice_nested_paragraphs.json").th
    //       .style("text-anchor", "middle")
    //       .text("Screen Time (in Seconds)");
    // };
-
-   // xAxis = d3.axisBottom(xScale);
    
    // yAxis = d3.axisLeft(yScale)
    //       .tickFormat(d => d3.format('~s')(d));
@@ -128,18 +104,18 @@ d3.json("/nested_paragraphs/Austen_PrideAndPrejudice_nested_paragraphs.json").th
 ///////////////////////////////////////////////////////////////////////////
    let xScale = d3.scaleLinear()
         .domain([0, nestedData.length])
-        .range([0, plotVars.plotWidth])
+        .range([plotVars.plotMarginLeft, plotVars.plotWidth])
    
-   // Function to scale each bar relative to the max height of the chart.
    let yScale = d3.scaleLinear()
-        .domain([0, 80]) //max found via script
+        .domain([0, 80]) //max val found via corpus script, choice to keep max value consistent across different novels
         .range([plotVars.plotMargin, plotVars.plotHeight - plotVars.plotMargin]);
         
    let svgContainer = d3.select("body")
       .append("svg")
       .attr("width", plotVars.plotWidth)
       .attr("height", plotVars.plotHeight)
-      .style("background-color", "whitesmoke");
+      .style("background-color", "white")
+      .style("border", "1px solid gray");
 
       svgContainer.selectAll('rect')
          .data(nestedData)
@@ -156,16 +132,61 @@ d3.json("/nested_paragraphs/Austen_PrideAndPrejudice_nested_paragraphs.json").th
             .attr('y', function(paragraph, parInd) { 
                return yScale(parInd);
             })
+            .attr("rx", 1.5) //rounded corners for "friendly" feeling
+            .attr("ry", 1.5)
             .attr('height', function(paragraph) { 
-               paragraphSize = paragraph.length * 0.0033;
+               let paragraphSize = Math.ceil(paragraph.length / 100) * 100 * 0.0031; //round to nearest 100 words
                return paragraphSize;    
             })
             .attr('width', function(paragraph, parInd) { //vertical length of paragraph
                return 14;
             })
-            .attr('fill', "blue")
+            .attr('fill', "forestgreen")
          });
+
+      svgContainer.append("g")
+         .selectAll("text.chapter")
+         .data(nestedData)
+         .join("text")
+         .attr("class", "text-chapter")
+         .attr('x', function(d, chapterInd) { 
+            return xScale(chapterInd); 
+         })
+         .attr('y', plotVars.plotMargin - 4)
+         .style('fill', "black")
+         .style('font-family', 'Georgia')
+         .style('font-size', 12)
+         .text(d => d.chapter);
+   
+////*Static tick-making and explainers*/////
+   let xAxis = d3.axisTop(xScale);
+   let yAxis = d3.axisLeft(yScale);
       
+   function drawTicks(plotContainer) {
+
+      plotContainer.append('g')
+         .attr('class', 'x-axis')
+         .attr('transform', `translate(0,${ plotVars.plotMargin })`);
+      
+      plotContainer.append('g')
+         .attr('class', 'y-axis')
+         .attr('transform', `translate(${plotVars.plotMargin*1.5}, 0)`)
+         .style('font-family', 'Georgia')
+         .call(yAxis);
+
+      plotContainer.append("text")
+         .attr("y", plotVars.plotHeight / 3)
+         .attr("x", 10)
+         .attr("style", "writing-mode: tb; glyph-orientation-vertical: 90")
+         .attr("dy", "1em")
+         .style('font-family', 'Georgia')
+         .style('font-size', 16)
+         .style("text-anchor", "middle")
+         .text("# of Paragraphs per Chapter");
+   };
+   
+   drawTicks(svgContainer);
+   
 });
 
 </script>
