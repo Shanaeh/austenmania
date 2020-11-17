@@ -39,18 +39,8 @@
       selectedKeyword = keywordSearch.value.toLowerCase();
    }
 
-d3.json("/nested_paragraphs/Austen_Combined_nested_paragraphs.json").then(function(nestedDataList) { 
-
+d3.json("/nested_paragraphs/Austen_PrideAndPrejudice_nested_paragraphs.json").then(function(nestedData) { 
 ////*Set-up, constants, global vars, and functions*////
-   const emma_nested_paragraphs = nestedDataList[0];
-   const mansfield_park_nested_paragraphs = nestedDataList[1];
-   const northanger_abbey_nested_paragraphs = nestedDataList[2];
-   const persuasion_nested_paragraphs = nestedDataList[3];
-   const pride_and_prejudice_nested_paragraphs = nestedDataList[4];
-   const sense_and_sensibility_nested_paragraphs = nestedDataList[5];
-
-   //Temporary until I implement toggle-able switching
-   let nestedData = pride_and_prejudice_nested_paragraphs;
 
    const plotVars = ({
       plotWidth: 1060,   // Width of plot region
