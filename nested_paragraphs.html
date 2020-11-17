@@ -1,17 +1,11 @@
 <!DOCTYPE html>
 <meta charset="utf-8">
 <meta title="austenmania, viz 1">
-<!--For original raw data processing, overall explanations,
-   and walkthrough up until the actual implementation of the multi-brush (which is below),
-   go to this shared notebook, https://observablehq.com/d/3e49962e0f6fe721.
-   
-   With limited time and more familiarity with html/js than the observable environment, 
-   I pivoted to this standalone version as global vars became increasingly complex.
-   See below for citations!-->
+
 <style>
 
-.grid-background {
-  fill: #eee;
+.y-axis-grid line {
+  stroke: silver !important;
 }
 
 .grid line,
@@ -30,42 +24,29 @@
 <script src="https://d3js.org/d3.v6.min.js"></script>
 
 <input type="text" value="marriage" id="keywordSearch">
-<button type="button" id="keywordSearchButton" onclick="searchKeywordOnClick()">Search for a term</button>
+<button type="button" id="keywordSearchButton" onclick="searchKeywordOnClick()">Search for a term</button> 
+<div>
+   <p>Paragraphs containing term: <span id="p-num-paragraphs-keyword"></span></p>
+   <p>Overall word frequency:  <span id="p-keyword-frequency"></span>
+</div>
+<!--Note: Needed to place the interactive button / input elements directly before d3 script to work-->
+
 <script>
 
    ////*HTML button helper, outside d3 file sharing*////
    let selectedKeyword = keywordSearch.value;
    function searchKeywordOnClick() {
-      selectedKeyword = keywordSearch.value;
+      selectedKeyword = keywordSearch.value.toLowerCase();
    }
 
 d3.json("/nested_paragraphs/Austen_PrideAndPrejudice_nested_paragraphs.json").then(function(nestedData) { 
-////*Set-up, constants, and functions*////
+////*Set-up, constants, global vars, and functions*////
 
    const plotVars = ({
       plotWidth: 1060,   // Width of plot region
       plotHeight: 1000,  // Height of plot region
       plotMargin: 30,   // Margin space for axes and their labels
       plotMarginLeft: 60   // Margin space for axes and their labels
-   });
-
-   let keywordSearch = document.getElementById("keywordSearch");
-      // Execute a function when the user releases a key on the keyboard
-   keywordSearch.addEventListener("keyup", function(event) {
-   // Number 13 is the "Enter" key on the keyboard
-   if (event.keyCode === 13) {
-      // Cancel the default action, if needed
-      console.log(keywordSearch.value);
-      event.preventDefault();
-      // Trigger the button element with a click
-      document.getElementById("keywordSearchButton").click();
-   }
-   });
-
-   d3.select("#keywordSearchButton").on("click", function() {
-         console.log(selectedKeyword);
-
-         //add more stuff to change
    });
 
    const numChapters = nestedData.length;
@@ -81,48 +62,102 @@ d3.json("/nested_paragraphs/Austen_PrideAndPrejudice_nested_paragraphs.json").th
    }
    const maxNumParagraphs = getMaxNumParagraphs();
 
+   let numParagraphsWithKeyword = 0;
+   let numKeywordFrequency = 0;
+   function containsWord(paragraph, word) {
+      let regexp = new RegExp(`\\b${word}\\b`, "gi"); //\\b + word + \\b for word + escapes, use global search and i for keyword frequency
+      
+      paragraphMatches = paragraph.match(regexp);
+      if(paragraphMatches != null) {
+         numKeywordFrequency += paragraph.match(regexp).length;
+         return true;
+      }
+      return false;
+   }
+
    let xScale = d3.scaleLinear()
         .domain([0, nestedData.length])
         .range([plotVars.plotMarginLeft, plotVars.plotWidth])
 
    let yScale = d3.scaleLinear()
-        .domain([0, maxNumParagraphs]) ////103 wanted consistency for comparison across different novels, 103 is the max
+        .domain([0, Math.ceil(maxNumParagraphs/5)*5]) //Round to upper 5 for axis //103 wanted consistency for comparison across different novels, 103 is the max
         .range([plotVars.plotMargin, plotVars.plotHeight - plotVars.plotMargin]);
   
-/*RENDERING PORTION*//////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////
+////*Search function*////
+   let keywordSearchBar = document.getElementById("keywordSearch");
+   keywordSearchBar.addEventListener("keyup", function(event) {
+   // Number 13 is the "Enter" key on the keyboard
+   if (event.keyCode === 13) {
+      event.preventDefault();
+      // Trigger the button element with a click
+      document.getElementById("keywordSearchButton").click();
+   }
+   });
+
+   d3.select("#keywordSearchButton").on("click", function() {
+         //reset counters for next search
+         numParagraphsWithKeyword = 0;
+         numKeywordFrequency = 0
+
+         d3.selectAll("rect")
+         .attr("fill", function(paragraph) { //d3 still saves the .each binding of each rect to paragraph, gosh I love it when things work 
+            if(containsWord(paragraph.toLowerCase(), selectedKeyword)) {
+               numParagraphsWithKeyword++;
+               return "hotpink";    
+            } else {
+               return "forestgreen";
+            }
+         })
+
+         d3.select("#p-num-paragraphs-keyword")
+         .text(numParagraphsWithKeyword)
+
+         d3.select("#p-keyword-frequency")
+         .text(numKeywordFrequency)
+   });
+
+////*Rendering portion*////
    let svgContainer = d3.select("body")
       .append("svg")
       .attr("width", plotVars.plotWidth)
       .attr("height", plotVars.plotHeight)
       .style("background-color", "white")
-      .style("border", "1px solid gray");
+      .style("border", "1px solid gray")
+      //insert grid lines on mouseover
+      .on("mouseover", function (d, i) {
+            d3.select(".y-axis-grid").transition()
+               .style("opacity", "0.8")
+      })
+      .on("mouseout", function (d, i) {
+            d3.select(".y-axis-grid").transition()
+               .style("opacity", "0")
+      })
 
-      svgContainer.selectAll('rect')
+      svgContainer.selectAll("rect")
          .data(nestedData)
          .enter()
-         .append('g')
+         .append("g")
          .each(function(d, chapterInd) {
-            d3.select(this).selectAll('rect')
+            d3.select(this).selectAll("rect")
             .data(d.paragraphs)
             .enter()
-            .append('rect')
-            .attr('x', function() { 
+            .append("rect")
+            .attr("x", function() { 
                return xScale(chapterInd); 
             })
-            .attr('y', function(paragraph, parInd) { 
+            .attr("y", function(paragraph, parInd) { 
                return yScale(parInd);
             })
             .attr("rx", 1.5) //rounded corners for "friendly" feeling
             .attr("ry", 1.5)
-            .attr('height', function(paragraph) { 
+            .attr("height", function(paragraph) { 
                let paragraphSize = Math.ceil(paragraph.length / 100) * 100 * 0.0031; //round to nearest 100 words
                return paragraphSize;    
             })
-            .attr('width', function(paragraph, parInd) { //vertical length of paragraph
+            .attr("width", function(paragraph, parInd) { //vertical length of paragraph
                return 14;
             })
-            .attr('fill', "forestgreen")
+            .attr("fill", "forestgreen")
          });
 
       svgContainer.append("g")
@@ -130,29 +165,37 @@ d3.json("/nested_paragraphs/Austen_PrideAndPrejudice_nested_paragraphs.json").th
          .data(nestedData)
          .join("text")
          .attr("class", "text-chapter")
-         .attr('x', function(d, chapterInd) { 
+         .attr("x", function(d, chapterInd) { 
             return xScale(chapterInd); 
          })
-         .attr('y', plotVars.plotMargin - 4)
-         .style('fill', "black")
-         .style('font-family', 'Georgia')
-         .style('font-size', 13)
+         .attr("y", plotVars.plotMargin - 4)
+         .style("fill", "black")
+         .style("font-family", "Georgia")
+         .style("font-size", 13)
          .text(d => d.chapter);
    
 ////*Static tick-making and explainers*/////
-   let xAxis = d3.axisTop(xScale);
-   let yAxis = d3.axisLeft(yScale);
+   const xAxis = d3.axisTop(xScale);
+   const yAxis = d3.axisLeft(yScale);
+   const yAxisGrid = d3.axisLeft(yScale).tickSize(-(plotVars.plotWidth + plotVars.plotMargin/2)).tickFormat("").ticks(15);
       
    function drawTicks(plotContainer) {
 
-      plotContainer.append('g')
-         .attr('class', 'x-axis')
-         .attr('transform', `translate(0,${ plotVars.plotMargin })`);
+      // plotContainer.append("g")
+      //    .attr("class", "x-axis")
+      //    .attr("transform", `translate(0,${ plotVars.plotHeight - plotVars.plotMargin })`)
+      //    .call(xAxis);
+
+      plotContainer.append("g")
+         .attr("class", "y-axis-grid")
+         .attr("transform", `translate(${plotVars.plotMarginLeft - plotVars.plotMargin/2 }, 0)`)
+         .style("opacity", 0)
+         .call(yAxisGrid);
       
-      plotContainer.append('g')
-         .attr('class', 'y-axis')
-         .attr('transform', `translate(${plotVars.plotMargin*1.5}, 0)`)
-         .style('font-family', 'Georgia')
+      plotContainer.append("g")
+         .attr("class", "y-axis")
+         .attr("transform", `translate(${plotVars.plotMargin*1.5}, 0)`)
+         .style("font-family", "Georgia")
          .call(yAxis);
 
       plotContainer.append("text")
@@ -160,8 +203,8 @@ d3.json("/nested_paragraphs/Austen_PrideAndPrejudice_nested_paragraphs.json").th
          .attr("x", 10)
          .attr("style", "writing-mode: tb; glyph-orientation-vertical: 90")
          .attr("dy", "1em")
-         .style('font-family', 'Georgia')
-         .style('font-size', 16)
+         .style("font-family", "Georgia")
+         .style("font-size", 16)
          .style("text-anchor", "middle")
          .text("# of Paragraphs per Chapter");
    };
