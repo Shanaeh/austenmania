@@ -8,26 +8,66 @@
   stroke: silver !important;
 }
 
-.grid line,
-.grid path {
-  fill: none;
-  stroke: #000;
-  shape-rendering: crispEdges;
+.div-main {
+   display: "flex";
+   flex-direction: "row";
+   border: 1px solid pink;
+}
+
+[class*="concordance-text-table"] {
+   width: 80%;
+   border: 1px solid black;
+   text-align: center;
+}
+.concordance-chapter-highlight, .concordance-table-container {
+   display: "flex";
+   flex-direction: "row";
+}
+
+.td {
+   width: 10px;
 }
 
 </style>
 
 <body>
+<script src="https://d3js.org/d3.v6.min.js"></script>
+
 <div>
    <h3>austenmania</h3>
 </div>
-<script src="https://d3js.org/d3.v6.min.js"></script>
 
-<input type="text" value="marriage" id="keywordSearch">
+<input type="text" value="listen" id="keywordSearch">
 <button type="button" id="keywordSearchButton" onclick="searchKeywordOnClick()">Search for a term</button> 
 <div>
    <p>Paragraphs containing term: <span id="p-num-paragraphs-keyword"></span></p>
-   <p>Overall word frequency:  <span id="p-keyword-frequency"></span>
+   <p>Overall word frequency: <span id="p-keyword-frequency"></span></p>
+</div>
+
+<div class="div-main">
+   <div class="concordance-chapter-highlight">
+      Placeholder
+
+   </div>
+   <div class="concordance-table-container">
+      <table class="concordance-text-table">
+         <thead>
+         <tr><th>chapter</th><th>...context</th><th>word</th><th>context...</th></tr>
+         </thead>
+         <tbody>
+            <!--d3 appending-->
+         </tbody>
+      </table>
+      <table class="concordance-text-table-2">
+         <thead>
+         <tr><th>chapter</th><th>...context</th><th>word</th><th>context...</th></tr>
+         </thead>
+         <tbody>
+            <!--d3 appending-->
+         </tbody>
+      </table>
+   </div>
+
 </div>
 <!--Note: Needed to place the interactive button / input elements directly before d3 script to work-->
 
@@ -39,12 +79,24 @@
       selectedKeyword = keywordSearch.value.toLowerCase();
    }
 
-d3.json("/nested_paragraphs/Austen_PrideAndPrejudice_nested_paragraphs.json").then(function(nestedData) { 
+d3.json("/nested_paragraphs/Austen_Combined_nested_paragraphs.json").then(function(nestedDataList) { 
+
 ////*Set-up, constants, global vars, and functions*////
+   const titles = ["Sense and Sensibility (begun 1795)", "Pride and Prejudice (bg. 1797)", "Northanger Abbey (bg. 1799)", "Mansfield Park (bg. 1811)", "Emma (bg. 1814)", "Persuasion (bg. 1815)"];
+   
+   const sense_and_sensibility_nested_paragraphs = nestedDataList[0];
+   const pride_and_prejudice_nested_paragraphs = nestedDataList[1];
+   const northanger_abbey_nested_paragraphs = nestedDataList[2];
+   const mansfield_park_nested_paragraphs = nestedDataList[3];
+   const emma_nested_paragraphs = nestedDataList[4];
+   const persuasion_nested_paragraphs = nestedDataList[5];
+
+   //Temporary until I implement toggle-able switching
+   let nestedData = pride_and_prejudice_nested_paragraphs;
 
    const plotVars = ({
       plotWidth: 1060,   // Width of plot region
-      plotHeight: 1000,  // Height of plot region
+      plotHeight: 700,  // Height of plot region
       plotMargin: 30,   // Margin space for axes and their labels
       plotMarginLeft: 60   // Margin space for axes and their labels
    });
@@ -75,15 +127,7 @@ d3.json("/nested_paragraphs/Austen_PrideAndPrejudice_nested_paragraphs.json").th
       return false;
    }
 
-   let xScale = d3.scaleLinear()
-        .domain([0, nestedData.length])
-        .range([plotVars.plotMarginLeft, plotVars.plotWidth])
-
-   let yScale = d3.scaleLinear()
-        .domain([0, Math.ceil(maxNumParagraphs/5)*5]) //Round to upper 5 for axis //103 wanted consistency for comparison across different novels, 103 is the max
-        .range([plotVars.plotMargin, plotVars.plotHeight - plotVars.plotMargin]);
-  
-////*Search function*////
+   ////*Search function*////
    let keywordSearchBar = document.getElementById("keywordSearch");
    keywordSearchBar.addEventListener("keyup", function(event) {
    // Number 13 is the "Enter" key on the keyboard
@@ -99,13 +143,20 @@ d3.json("/nested_paragraphs/Austen_PrideAndPrejudice_nested_paragraphs.json").th
          numParagraphsWithKeyword = 0;
          numKeywordFrequency = 0
 
-         d3.selectAll("rect")
-         .attr("fill", function(paragraph) { //d3 still saves the .each binding of each rect to paragraph, gosh I love it when things work 
-            if(containsWord(paragraph.toLowerCase(), selectedKeyword)) {
+         d3.selectAll("div")
+         // .filter(function() {
+         //    if(d3.select(this) != null) {
+         //       return d3.select(this).attr('id').substr('paragraph-') !== -1;
+         //    }
+         // })
+         .style("background-color", function(paragraph) { //d3 still saves the .each binding of each rect to paragraph, gosh I love it when things work 
+            if(!paragraph) { //d3 does not like <p> with nested <span>s
+               return "";
+            } else if(containsWord(paragraph.toLowerCase(), selectedKeyword)) {
                numParagraphsWithKeyword++;
-               return "hotpink";    
+               return "blue";    
             } else {
-               return "forestgreen";
+              return "";
             }
          })
 
@@ -116,100 +167,121 @@ d3.json("/nested_paragraphs/Austen_PrideAndPrejudice_nested_paragraphs.json").th
          .text(numKeywordFrequency)
    });
 
-////*Rendering portion*////
-   let svgContainer = d3.select("body")
-      .append("svg")
-      .attr("width", plotVars.plotWidth)
-      .attr("height", plotVars.plotHeight)
-      .style("background-color", "white")
-      .style("border", "1px solid gray")
-      //insert grid lines on mouseover
-      .on("mouseover", function (d, i) {
-            d3.select(".y-axis-grid").transition()
-               .style("opacity", "0.8")
+   let testData = [
+         {chapter: 2, leftContext: "I can ", word: "listen", rightContext: "no longer in silence"},
+         {chapter: 5, leftContext: "To ", word: "listen", rightContext: "is to acknowledge"},
+      ];
+   let testData2 = [
+      {chapter: 4, leftContext: "Oh Lizzy, you never", word: "listen", rightContext: "!"},
+   ];
+
+   //render
+   let tr = d3.select(".concordance-text-table tbody")
+      .selectAll("tr")
+      .data(testData)
+      .attr("id", function(entry) {
+         return `concordance-tr-chapter-${entry.chapter}`;
       })
-      .on("mouseout", function (d, i) {
-            d3.select(".y-axis-grid").transition()
-               .style("opacity", "0")
+      .enter()
+      .append("tr");
+
+   let td = tr.selectAll("td")
+      .data(function(entry) { 
+         return Object.values(entry); 
       })
-
-      svgContainer.selectAll("rect")
-         .data(nestedData)
-         .enter()
-         .append("g")
-         .each(function(d, chapterInd) {
-            d3.select(this).selectAll("rect")
-            .data(d.paragraphs)
-            .enter()
-            .append("rect")
-            .attr("x", function() { 
-               return xScale(chapterInd); 
-            })
-            .attr("y", function(paragraph, parInd) { 
-               return yScale(parInd);
-            })
-            .attr("rx", 1.5) //rounded corners for "friendly" feeling
-            .attr("ry", 1.5)
-            .attr("height", function(paragraph) { 
-               let paragraphSize = Math.ceil(paragraph.length / 100) * 100 * 0.0031; //round to nearest 100 words
-               return paragraphSize;    
-            })
-            .attr("width", function(paragraph, parInd) { //vertical length of paragraph
-               return 14;
-            })
-            .attr("fill", "forestgreen")
-         });
-
-      svgContainer.append("g")
-         .selectAll("text.chapter")
-         .data(nestedData)
-         .join("text")
-         .attr("class", "text-chapter")
-         .attr("x", function(d, chapterInd) { 
-            return xScale(chapterInd); 
-         })
-         .attr("y", plotVars.plotMargin - 4)
-         .style("fill", "black")
-         .style("font-family", "Georgia")
-         .style("font-size", 13)
-         .text(d => d.chapter);
+      .enter()
+      .append("td")
+      .text(function(d) { 
+         return d; 
+      });
    
-////*Static tick-making and explainers*/////
-   const xAxis = d3.axisTop(xScale);
-   const yAxis = d3.axisLeft(yScale);
-   const yAxisGrid = d3.axisLeft(yScale).tickSize(-(plotVars.plotWidth + plotVars.plotMargin/2)).tickFormat("").ticks(15);
-      
-   function drawTicks(plotContainer) {
+   let tr2 = d3.select(".concordance-text-table-2 tbody")
+      .selectAll("tr")
+      .data(testData2)
+      .attr("id", function(entry) {
+         return `concordance-tr2-chapter-${entry.chapter}`;
+      })
+      .enter()
+      .append("tr");
 
-      // plotContainer.append("g")
-      //    .attr("class", "x-axis")
-      //    .attr("transform", `translate(0,${ plotVars.plotHeight - plotVars.plotMargin })`)
-      //    .call(xAxis);
+   let td2 = tr2.selectAll("td")
+      .data(function(entry) { 
+         return Object.values(entry); 
+      })
+      .enter()
+      .append("td")
+      .text(function(d) { 
+         return d; 
+      });
 
-      plotContainer.append("g")
-         .attr("class", "y-axis-grid")
-         .attr("transform", `translate(${plotVars.plotMarginLeft - plotVars.plotMargin/2 }, 0)`)
-         .style("opacity", 0)
-         .call(yAxisGrid);
-      
-      plotContainer.append("g")
-         .attr("class", "y-axis")
-         .attr("transform", `translate(${plotVars.plotMargin*1.5}, 0)`)
-         .style("font-family", "Georgia")
-         .call(yAxis);
 
-      plotContainer.append("text")
-         .attr("y", plotVars.plotHeight / 3)
-         .attr("x", 10)
-         .attr("style", "writing-mode: tb; glyph-orientation-vertical: 90")
-         .attr("dy", "1em")
-         .style("font-family", "Georgia")
-         .style("font-size", 16)
-         .style("text-anchor", "middle")
-         .text("# of Paragraphs per Chapter");
-   };
-   
-   drawTicks(svgContainer);
+
+   // let divContainer = d3.select("body")
+   //    .append("div")
+   //    .attr("id", "div-main")
+   //    .attr("width", plotVars.plotWidth)
+   //    .attr("height", plotVars.plotHeight)
+   //    .style("background-color", "whitesmoke")
+   //    .style("border", "1px solid gray");
+
+   // let concordanceTextView = d3.select("#div-main")
+   //    .append("div")
+   //    .attr("id", "div-concordance-text-view")
+   //    .attr("width", 0.8*plotVars.plotWidth)
+   //    .attr("height", plotVars.plotHeight)
+   //    .style("background-color", "peachpuff")
+   //    .style("border", "1px solid gray");
+
+   //    concordanceTextView.select("#div-concordance-text-view")
+   //       .data(testData)
+   //       .enter()
+   //       .append("div")
+   //       .attr("id", function(chapterListItem, chapterListInd) { 
+   //             return `div-concordance-text-view-chapter-${chapterListItem.chapter}`;
+   //          })
+   //       .style("background-color", "whitesmoke")
+   //       .each(function(chapterListItem, chapterListInd) {
+   //          d3.select(this).selectAll("div")
+   //          .data(chapterListItem.paragraphs)
+   //          .enter()
+   //          .append("div")
+   //          .attr("id", function(paragraph, parInd) { 
+   //             return `div-concordance-text-view-chapter-${chapterListItem.chapter}-paragraph-${parInd}`;
+   //          })
+   //          .text(function(paragraph, parInd) {
+   //             return paragraph;
+   //          })
+   //          .style("font-family", "Georgia")
+   //          .style("font-size", "12px")
+   //    });
+
+      //initialize all bindings
+      // divContainer.selectAll("div")
+      //    .data(nestedData)
+      //    .enter()
+      //    .append("div")
+      //    .attr("id", function(chapter, chapterListInd) { 
+      //          return `div-chapter-${chapterListInd+1}`;
+      //       })
+      //    .style("background-color", function(chapter, chapterListInd) {
+      //       if(chapterListInd % 5 == 0) return "hotpink";
+      //       return "white";
+      //    })
+      //    .each(function(entry, chapterListInd) {
+      //       d3.select(this).selectAll("p")
+      //       .data(entry.paragraphs)
+      //       .enter()
+      //       .append("p")
+      //       .attr("id", function(paragraph, parInd) { 
+      //          return `div-chapter-${chapterListInd+1}-paragraph-${parInd}`;
+      //       })
+      //       .text(function(paragraph, parInd) {
+      //          return paragraph;
+      //       })
+      //       .style("font-family", "Georgia")
+      //       .style("font-size", "2px")
+      //    });
+
    
 });
 
