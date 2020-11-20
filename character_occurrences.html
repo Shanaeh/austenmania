@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<meta title="austenmania, viz 1">
+
+<style>
+
+.y-axis-grid line {
+  stroke: silver !important;
+}
+
+.div-main {
+   display: "flex";
+   flex-direction: "row";
+   border: 1px solid pink;
+}
+
+[class*="concordance-text-table"] {
+   width: 80%;
+   border: 1px solid black;
+   text-align: center;
+}
+.concordance-chapter-highlight, .concordance-table-container {
+   display: "flex";
+   flex-direction: "row";
+}
+
+.td {
+   width: 10px;
+}
+
+</style>
+
+<body>
+<script src="https://d3js.org/d3.v6.min.js"></script>
+
+<div>
+   <h3>austenmania</h3>
+</div>
+
+<input type="text" value="listen" id="keywordSearch">
+<button type="button" id="keywordSearchButton" onclick="searchKeywordOnClick()">Search for a term</button> 
+<div>
+   <p>Paragraphs containing term: <span id="p-num-paragraphs-keyword"></span></p>
+   <p>Overall word frequency: <span id="p-keyword-frequency"></span></p>
+</div>
+
+<div class="div-main">
+   <div class="concordance-chapter-highlight">
+      Placeholder
+
+   </div>
+   <div class="concordance-table-container">
+      <table class="concordance-text-table">
+         <thead>
+         <tr><th>chapter</th><th>...context</th><th>word</th><th>context...</th></tr>
+         </thead>
+         <tbody>
+            <!--d3 appending-->
+         </tbody>
+      </table>
+      <table class="concordance-text-table-2">
+         <thead>
+         <tr><th>chapter</th><th>...context</th><th>word</th><th>context...</th></tr>
+         </thead>
+         <tbody>
+            <!--d3 appending-->
+         </tbody>
+      </table>
+   </div>
+
+</div>
+<!--Note: Needed to place the interactive button / input elements directly before d3 script to work-->
+
+<script>
+
+   ////*HTML button helper, outside d3 file sharing*////
+   let selectedKeyword = keywordSearch.value;
+   function searchKeywordOnClick() {
+      selectedKeyword = keywordSearch.value.toLowerCase();
+   }
+
+d3.json("/nested_paragraphs/Austen_Combined_nested_paragraphs.json").then(function(nestedDataList) { 
+
+////*Set-up, constants, global vars, and functions*////
+   const titles = ["Sense and Sensibility (begun 1795)", "Pride and Prejudice (bg. 1797)", "Northanger Abbey (bg. 1799)", "Mansfield Park (bg. 1811)", "Emma (bg. 1814)", "Persuasion (bg. 1815)"];
+   
+   const sense_and_sensibility_nested_paragraphs = nestedDataList[0];
+   const pride_and_prejudice_nested_paragraphs = nestedDataList[1];
+   const northanger_abbey_nested_paragraphs = nestedDataList[2];
+   const mansfield_park_nested_paragraphs = nestedDataList[3];
+   const emma_nested_paragraphs = nestedDataList[4];
+   const persuasion_nested_paragraphs = nestedDataList[5];
+
+   //Temporary until I implement toggle-able switching
+   let nestedData = pride_and_prejudice_nested_paragraphs;
+
+   const plotVars = ({
+      plotWidth: 1060,   // Width of plot region
+      plotHeight: 700,  // Height of plot region
+      plotMargin: 30,   // Margin space for axes and their labels
+      plotMarginLeft: 60   // Margin space for axes and their labels
+   });
+
+   const numChapters = nestedData.length;
+   function getMaxNumParagraphs() {
+      let maxParagraphs = 0;
+      for(let i=0; i < numChapters; i++) {
+         const numParagraphs = nestedData[i].paragraphs.length;
+         if(maxParagraphs < numParagraphs) {
+            maxParagraphs = numParagraphs;
+         }
+      }
+      return maxParagraphs;
+   }
+   const maxNumParagraphs = getMaxNumParagraphs();
+
+   let numParagraphsWithKeyword = 0;
+   let numKeywordFrequency = 0;
+   function containsWord(paragraph, word) {
+      let regexp = new RegExp(`\\b${word}\\b`, "gi"); //\\b + word + \\b for word + escapes, use global search and i for keyword frequency
+      
+      paragraphMatches = paragraph.match(regexp);
+      if(paragraphMatches != null) {
+         numKeywordFrequency += paragraph.match(regexp).length;
+         return true;
+      }
+      return false;
+   }
+
+   ////*Search function*////
+   let keywordSearchBar = document.getElementById("keywordSearch");
+   keywordSearchBar.addEventListener("keyup", function(event) {
+   // Number 13 is the "Enter" key on the keyboard
+   if (event.keyCode === 13) {
+      event.preventDefault();
+      // Trigger the button element with a click
+      document.getElementById("keywordSearchButton").click();
+   }
+   });
+
+   d3.select("#keywordSearchButton").on("click", function() {
+         //reset counters for next search
+         numParagraphsWithKeyword = 0;
+         numKeywordFrequency = 0
+
+         d3.selectAll("div")
+         // .filter(function() {
+         //    if(d3.select(this) != null) {
+         //       return d3.select(this).attr('id').substr('paragraph-') !== -1;
+         //    }
+         // })
+         .style("background-color", function(paragraph) { //d3 still saves the .each binding of each rect to paragraph, gosh I love it when things work 
+            if(!paragraph) { //d3 does not like <p> with nested <span>s
+               return "";
+            } else if(containsWord(paragraph.toLowerCase(), selectedKeyword)) {
+               numParagraphsWithKeyword++;
+               return "blue";    
+            } else {
+              return "";
+            }
+         })
+
+         d3.select("#p-num-paragraphs-keyword")
+         .text(numParagraphsWithKeyword)
+
+         d3.select("#p-keyword-frequency")
+         .text(numKeywordFrequency)
+   });
+
+   let testData = [
+         {chapter: 2, leftContext: "I can ", word: "listen", rightContext: "no longer in silence"},
+         {chapter: 5, leftContext: "To ", word: "listen", rightContext: "is to acknowledge"},
+      ];
+   let testData2 = [
+      {chapter: 4, leftContext: "Oh Lizzy, you never", word: "listen", rightContext: "!"},
+   ];
+
+   //render
+   let tr = d3.select(".concordance-text-table tbody")
+      .selectAll("tr")
+      .data(testData)
+      .attr("id", function(entry) {
+         return `concordance-tr-chapter-${entry.chapter}`;
+      })
+      .enter()
+      .append("tr");
+
+   let td = tr.selectAll("td")
+      .data(function(entry) { 
+         return Object.values(entry); 
+      })
+      .enter()
+      .append("td")
+      .text(function(d) { 
+         return d; 
+      });
+   
+   let tr2 = d3.select(".concordance-text-table-2 tbody")
+      .selectAll("tr")
+      .data(testData2)
+      .attr("id", function(entry) {
+         return `concordance-tr2-chapter-${entry.chapter}`;
+      })
+      .enter()
+      .append("tr");
+
+   let td2 = tr2.selectAll("td")
+      .data(function(entry) { 
+         return Object.values(entry); 
+      })
+      .enter()
+      .append("td")
+      .text(function(d) { 
+         return d; 
+      });
+
+
+
+   // let divContainer = d3.select("body")
+   //    .append("div")
+   //    .attr("id", "div-main")
+   //    .attr("width", plotVars.plotWidth)
+   //    .attr("height", plotVars.plotHeight)
+   //    .style("background-color", "whitesmoke")
+   //    .style("border", "1px solid gray");
+
+   // let concordanceTextView = d3.select("#div-main")
+   //    .append("div")
+   //    .attr("id", "div-concordance-text-view")
+   //    .attr("width", 0.8*plotVars.plotWidth)
+   //    .attr("height", plotVars.plotHeight)
+   //    .style("background-color", "peachpuff")
+   //    .style("border", "1px solid gray");
+
+   //    concordanceTextView.select("#div-concordance-text-view")
+   //       .data(testData)
+   //       .enter()
+   //       .append("div")
+   //       .attr("id", function(chapterListItem, chapterListInd) { 
+   //             return `div-concordance-text-view-chapter-${chapterListItem.chapter}`;
+   //          })
+   //       .style("background-color", "whitesmoke")
+   //       .each(function(chapterListItem, chapterListInd) {
+   //          d3.select(this).selectAll("div")
+   //          .data(chapterListItem.paragraphs)
+   //          .enter()
+   //          .append("div")
+   //          .attr("id", function(paragraph, parInd) { 
+   //             return `div-concordance-text-view-chapter-${chapterListItem.chapter}-paragraph-${parInd}`;
+   //          })
+   //          .text(function(paragraph, parInd) {
+   //             return paragraph;
+   //          })
+   //          .style("font-family", "Georgia")
+   //          .style("font-size", "12px")
+   //    });
+
+      //initialize all bindings
+      // divContainer.selectAll("div")
+      //    .data(nestedData)
+      //    .enter()
+      //    .append("div")
+      //    .attr("id", function(chapter, chapterListInd) { 
+      //          return `div-chapter-${chapterListInd+1}`;
+      //       })
+      //    .style("background-color", function(chapter, chapterListInd) {
+      //       if(chapterListInd % 5 == 0) return "hotpink";
+      //       return "white";
+      //    })
+      //    .each(function(entry, chapterListInd) {
+      //       d3.select(this).selectAll("p")
+      //       .data(entry.paragraphs)
+      //       .enter()
+      //       .append("p")
+      //       .attr("id", function(paragraph, parInd) { 
+      //          return `div-chapter-${chapterListInd+1}-paragraph-${parInd}`;
+      //       })
+      //       .text(function(paragraph, parInd) {
+      //          return paragraph;
+      //       })
+      //       .style("font-family", "Georgia")
+      //       .style("font-size", "2px")
+      //    });
+
+   
+});
+
+</script>
+
+</body>
+</html>
