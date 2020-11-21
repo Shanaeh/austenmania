@@ -2,6 +2,8 @@ import os, io, csv, json, string
 
 import nltk
 from nltk import *
+from nltk.corpus import stopwords
+cachedStopWords = stopwords.words("english")
 
 #variables for this usage
 my_main_directory = f"{os.getcwd()}/corpus/"
@@ -33,7 +35,6 @@ def get_formatted_bigrams(filename):
             if outer_val == nested_bigram_key: #checks against the key
                nested_dict[outer_val] += 1
                not_in_nest = False
-               continue
          if not_in_nest: #else, add another value pair to the nested dict
             nested_dict[outer_val] = 1
 

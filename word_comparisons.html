@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<meta title="austenmania, viz 1">
+
+<style>
+
+body {
+   font-family: "Georgia";
+}
+
+line {
+  stroke: silver !important;
+}
+
+.grid line,
+.grid path {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+[class*="bar-chart-container"] {
+   display: flex;
+   flex-direction: row;
+}
+
+[class*="bar-chart-container-dropdown"] {
+   display: flex;
+   flex-direction: row;
+}
+[class*="bar-chart-dropdown"] {
+   font-size: 16px;
+   font-family: "Georgia";
+   font-weight: bold;
+   width: 300px;
+   text-align-last: center;
+}
+
+.bar-chart-dropdown-spacer {
+   font-size: 14px;
+   width: 158px;
+}
+
+[class*="bar-chart-words-container"] {
+   text-align: center;
+   background-color: lightgrey;
+   border: 1px solid gray;
+   width: 150px;
+
+   display: flex;
+   flex-direction: column;
+   justify-content: space-between;
+   align-items: center;
+   padding-top: 3px;
+   padding-bottom: 3px;
+}
+
+.bar-chart-words {
+   font-size: 14px;
+   font-family: "Georgia";
+   text-align-last: center;
+   width: 95%;
+}
+
+.bar-chart-words-message {
+   font-size: 12px;
+   font-style: italic;
+}
+
+.bar-chart-button {
+   font-size: 14px;
+   font-family: "Georgia";
+   font-weight: bold;
+   text-align-last: center;
+   width: 90%;
+}
+
+</style>
+
+<body>
+<div>
+   <h3>austenmania</h3>
+</div>
+<script src="https://d3js.org/d3.v6.min.js"></script>
+
+<div>
+   <h3>The bar chart section</h3>
+   
+   <!--I acknowledge that this is not a neat solution, in d3 or html/css; 
+      I added 3 diverging bar chart units into html with pre-made svgs to initialize divs +
+      to reduce error from integrating search term functionality in the center
+      i.e. experimenting with the design, up to the deadline
+      TODO: clean up code style, port over to React to reuse components-->
+   <div class="bar-chart-container-dropdown-1">
+      <select class="bar-chart-dropdown" id="bar-chart-dropdown-1a">
+         <option value=0>Sense and Sensibility</option>
+         <option value=1 selected=1>Pride and Prejudice</option>
+         <option value=2>Northanger Abbey</option>
+         <option value=3>Mansfield Park</option>
+         <option value=4>Emma</option>
+         <option value=5>Persuasion</option>
+         <option value=6>All novels</option>
+      </select>
+      <span class="bar-chart-dropdown-spacer">Terms</span>
+      <select class="bar-chart-dropdown" id="bar-chart-dropdown-1b">
+         <option value="0">Sense and Sensibility</option>
+         <option value="1">Pride and Prejudice</option>
+         <option value="2">Northanger Abbey</option>
+         <option value="3">Mansfield Park</option>
+         <option value="4">Emma</option>
+         <option value="5">Persuasion</option>
+         <option value="6" selected=6>All novels</option>
+      </select>
+   </div>
+
+   <div class="bar-chart-container-1">
+      <svg id="bar-chart-svg-1a"> </svg>
+         <div class="bar-chart-words-container-1"><span class="bar-chart-words-message">Select and enter new terms, then hit update all</span>
+            <input type="text" value="marriage" class="bar-chart-words" id="bar-chart-words-1-0">
+            <input type="text" value="income" class="bar-chart-words" id="bar-chart-words-1-1">
+            <input type="text" value="money" class="bar-chart-words" id="bar-chart-words-1-2">
+            <input type="text" value="pounds" class="bar-chart-words" id="bar-chart-words-1-3">
+            <input type="text" value="family" class="bar-chart-words" id="bar-chart-words-1-4">
+            <button type="button" class="bar-chart-button" id="bar-chart-word-search-button-1" onclick="searchKeywordsOnClick1()">Update all</button> 
+         </div>
+      <svg id="bar-chart-svg-1b"> </svg>
+   </div>
+
+
+
+</div>
+<!--Note: Needed to place the interactive button / input elements directly before d3 script to work-->
+
+<script>
+
+   ////*HTML button helper, outside d3 file sharing*////
+   let selectedKeywordsBarChart = [
+      ["marriage", "income", "money", "pounds", "family"],
+      [],
+      []
+   ];
+   let currBarChartId = 0;
+   
+   const numKeywords = 5;
+   const numBarCharts = 3;
+   function searchKeywordsOnClick1() {
+      for(let i=0; i < numKeywords; i++) {
+         selectedKeywordsBarChart[0][i] = document.getElementById(`bar-chart-words-1-${i}`).value.toLowerCase();
+      }
+      currBarChartId = 0;
+   }
+   function searchKeywordsOnClick2() {
+      for(let i=0; i < numKeywords; i++) {
+         selectedKeywordsBarChart[1][i] = document.getElementById(`bar-chart-words-2-${i}`).value.toLowerCase();
+      }
+      currBarChartId = 1;
+   }
+   function searchKeywordsOnClick3() {
+      for(let i=0; i < numKeywords; i++) {
+         selectedKeywordsBarChart[2][i] = document.getElementById(`bar-chart-words-3-${i}`).value.toLowerCase();
+      }
+      currBarChartId = 2;
+   }
+
+Promise.all([
+    d3.csv("/word_counts/Austen_SenseAndSensibility_count.csv"),
+    d3.csv("/word_counts/Austen_PrideAndPrejudice_count.csv"),
+    d3.csv("/word_counts/Austen_NorthangerAbbey_count.csv"),
+    d3.csv("/word_counts/Austen_MansfieldPark_count.csv"),
+    d3.csv("/word_counts/Austen_Emma_count.csv"),
+    d3.csv("/word_counts/Austen_Persuasion_count.csv"),
+    d3.csv("/word_counts/Austen_Combined_count.csv"),
+]).then(function(nestedDataList) {
+////*Set-up, constants, global vars, and functions*////
+   const titles = ["Sense and Sensibility", "Pride and Prejudice", "Northanger Abbey", "Mansfield Park", "Emma", "Persuasion", "All"];
+   const word_count_numbers = [{count: 120000, divider: 12}, {count: 122000, divider: 12.2}, {count: 77000, divider: 7.7}, {count: 160000, divider: 16}, {count: 161000, divider: 16.1}, {count: 83000, divider: 8.3}, {count: 723000, divider: 72.3}]; //rounded to nearest 1000 for text-processing error
+   
+   const sense_and_sensibility_words = nestedDataList[0];
+   const pride_and_prejudice_words = nestedDataList[1];
+   const northanger_abbey_words = nestedDataList[2];
+   const mansfield_park_words = nestedDataList[3];
+   const emma_words = nestedDataList[4];
+   const persuasion_words = nestedDataList[5];
+   const combined_words = nestedDataList[6];
+
+   const plotVars = ({
+      plotWidth: 300,   // Width of plot region
+      plotHeight: 260,  // Height of plot region
+      plotMargin: 30,   // Margin space for axes and their labels
+      plotMarginLeft: 60   // Margin space for axes and their labels
+   });
+
+   rainbow_colors = ["ff0000", "f57f17", "ffd600", "ide4bd", "19aade", "142459", "7d3ac1", "cc0099", "663300", "ff99ff", "9e9e9e"];
+   
+   let numParagraphsWithKeyword = 0;
+   let numKeywordFrequency = 0;
+   function containsWord(paragraph, word) {
+      let regexp = new RegExp(`\\b${word}\\b`, "gi"); //\\b + word + \\b for word + escapes, use global search and i for keyword frequency
+      
+      paragraphMatches = paragraph.match(regexp);
+      if(paragraphMatches != null) {
+         numKeywordFrequency += paragraph.match(regexp).length;
+         return true;
+      }
+      return false;
+   }
+
+   function drawTicks(plotContainer, yAxisGrid, yAxis, id) {
+      plotContainer.append("g")
+         .attr("class", `y-axis-grid-${id}`)
+         .attr("transform", `translate(${plotVars.plotMarginLeft - plotVars.plotMargin/2 }, 0)`)
+         .style("opacity", 0)
+         .call(yAxisGrid);
+      
+      plotContainer.append("g")
+         .attr("class", `y-axis-${id}`)
+         .attr("transform", `translate(${plotVars.plotMargin*1.5}, 0)`)
+         .style("font-family", "Georgia")
+         .call(yAxis);
+      
+      plotContainer.append("g")
+         .attr("class", `x-axis-${id}`)
+         .attr('transform', `translate(0,${ plotVars.plotHeight - plotVars.plotMargin })`)
+         .style("font-family", "Georgia")
+         .call(xAxis);
+
+      plotContainer.append("text")
+         .attr("y", plotVars.plotHeight / 3)
+         .attr("x", 10)
+         .attr("style", "writing-mode: tb; glyph-orientation-vertical: 90")
+         .attr("dy", "1em")
+         .style("font-family", "Georgia")
+         .style("font-size", 12)
+         .style("text-anchor", "middle")
+         .text("Character Mentions per Chapter");
+      
+      plotContainer.append("text")
+         .attr("y", 14)
+         .attr("x", (plotVars.plotWidth + plotVars.plotMargin) / 2)
+         .attr("dy", "1em")
+         .style("font-family", "Georgia")
+         .style("font-size", 16)
+         .style("text-anchor", "middle")
+         .text(function() {
+            title_id = id[id.length - 1];
+            return titles[title_id];
+         });
+
+   };
+      
+////*Search function*////
+   d3.select(`#bar-chart-word-search-button-${currBarChartId+1}`).on("click", function() {
+      //insert code to redraw bars
+      d3.select("#bar-chart-svg-1a")
+      .style("background-color", "green");
+
+      d3.selectAll("rect")
+      .attr("fill", function(paragraph) { //d3 still saves the .each binding of each rect to paragraph, gosh I love it when things work 
+         if(containsWord(paragraph.toLowerCase(), selectedKeyword)) {
+            numParagraphsWithKeyword++;
+            return "hotpink";    
+         } else {
+            return "forestgreen";
+         }
+      })
+   });
+
+////*Rendering portion*////
+   function initializeSingleRender(numId) {
+      //Redefine constants, oops nnumId is really the bar chart 1, 2, or 3; subtract 1 for array searching
+      let leftIndex = document.getElementById(`bar-chart-dropdown-${numId}a`).value;
+      leftData = nestedDataList[leftIndex];
+
+      let rightIndex = document.getElementById(`bar-chart-dropdown-${numId}b`).value;
+      rightData = nestedDataList[rightIndex];
+
+      //Look up and fill in values from word frequency file
+      let leftChartVals = [];
+      let rightChartVals = [];
+      for(let i=0; i < numKeywords; i++) {
+         let wordToFindLeft = selectedKeywordsBarChart[numId-1][i];
+         let wordToFindRight = selectedKeywordsBarChart[numId-1][i];
+
+         let foundWordLeft = leftData.filter(obj => obj.word === wordToFindLeft)[0];
+         let foundWordRight = rightData.filter(obj => obj.word === wordToFindRight)[0];
+
+         if(foundWordLeft) {
+            let freqPer10k = parseFloat(foundWordLeft.frequency) / parseFloat(word_count_numbers[leftIndex].divider);
+            leftChartVals[i] = {"key": i, "value": freqPer10k };
+         } else {
+            leftChartVals[i] = -1;
+         }
+         if(foundWordRight) {
+            let freqPer10k = parseFloat(foundWordRight.frequency) / parseFloat(word_count_numbers[rightIndex].divider);
+            rightChartVals[i] = {"key": i, "value": freqPer10k };
+         } else {
+            rightChartVals[i] = -1;
+         }
+      }
+
+      let xMax = Math.ceil(Math.max(d3.max(leftChartVals, d => d.value), d3.max(rightChartVals, d=> d.value))); //use same baseline for comparison
+      let xScaleA = d3.scaleLinear()
+        .domain([0, xMax])
+        .range([plotVars.plotWidth, 0])
+
+      let yScaleA = d3.scaleBand()
+        .domain(leftChartVals.map(d => d.key)) //Per # of terms
+        .range([plotVars.plotMargin, plotVars.plotHeight - plotVars.plotMargin]); //plot top to bottom
+      
+      //Static tick-making and explainers
+      //let xAxis = d3.axisBottom(xScale);
+      //let yAxisGrid = d3.axisLeft(yScale).tickSize(-(plotVars.plotWidth + plotVars.plotMargin/2)).tickFormat("").ticks(12);
+         
+      //Redraw svg containers
+      let leftSvgContainer = d3.select(`#bar-chart-svg-${numId}a`)
+      .attr("width", plotVars.plotWidth)
+      .attr("height", plotVars.plotHeight)
+      .style("background-color", "whitesmoke")
+      .style("border", "1px solid gray")
+         //insert grid lines on mouseover
+         .on("mouseover", function (d, i) {
+               d3.select(`.y-axis-grid-${numId}a`).transition()
+                  .style("opacity", "0.8")
+         })
+         .on("mouseout", function (d, i) {
+               d3.select(`.y-axis-grid-${numId}a`).transition()
+                  .style("opacity", "0")
+         });
+
+      let rightSvgContainer = d3.select(`#bar-chart-svg-${numId}b`)
+         .attr("width", plotVars.plotWidth)
+         .attr("height", plotVars.plotHeight)
+         .style("background-color", "whitesmoke")
+         .style("border", "1px solid gray")
+         //insert grid lines on mouseover
+         .on("mouseover", function (d, i) {
+               d3.select(`.y-axis-grid-${numId}b`).transition()
+                  .style("opacity", "0.8")
+         })
+         .on("mouseout", function (d, i) {
+               d3.select(`.y-axis-grid-${numId}b`).transition()
+                  .style("opacity", "0")
+         });
+      
+      //draw the rects
+      leftSvgContainer.selectAll('rect')
+         .data(leftChartVals)
+         .join('rect')
+         .attr('x', arrayVal => xScaleA(arrayVal.value))
+         .attr('y', arrayVal => yScaleA(arrayVal.key))
+         .attr('width', function(arrayVal) {
+            return xScaleA(0) - xScaleA(arrayVal.value); 
+         })
+         .attr('height', yScaleA.bandwidth())  // <-- Band scales split a pixel range into equal-sized bands
+         .style('fill', arrayVal => "red")
+         .style('stroke', 'white');
+
+
+      //drawTicks(svgContainer, yAxisGrid, yAxis, xAxis, id);
+   }
+
+
+   for(let i=1; i <= 1; i++) {
+      initializeSingleRender(i);
+   }
+});
+
+</script>
+
+</body>
+</html>
