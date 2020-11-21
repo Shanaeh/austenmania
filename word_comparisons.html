@@ -348,7 +348,7 @@ Promise.all([
          })
          .attr("height", yScaleA.bandwidth())  // <-- Band scales split a pixel range into equal-sized bands
          .style("fill", arrayVal => violet_red_colors[arrayVal.key])
-         .style("opacity", 0.9)         
+         .style("opacity", 0.85)         
          .style("stroke", "white");
 
       //redraw the rects for the right
@@ -369,7 +369,7 @@ Promise.all([
          })
          .attr("height", yScaleB.bandwidth())  // <-- Band scales split a pixel range into equal-sized bands
          .style("fill", arrayVal => violet_red_colors[arrayVal.key])
-         .style("opacity", 0.9)         
+         .style("opacity", 0.85)         
          .style("stroke", "white");
 
       let xAxisA = d3.axisBottom(xScaleA);
@@ -442,13 +442,31 @@ Promise.all([
       .attr("width", plotVars.plotWidth)
       .attr("height", plotVars.plotHeight)
       .style("background-color", "whitesmoke")
-      .style("border", "1px solid gray");
+      .style("border", "1px solid gray")
+            //insert grid lines on mouseover
+      .on("mouseover", function (d, i) {
+         d3.select(`.bar-chart-x-axis-grid-${numId}a`).transition()
+         .style("opacity", "0.8")
+      })
+      .on("mouseout", function (d, i) {
+            d3.select(`.bar-chart-x-axis-grid-${numId}a`).transition()
+            .style("opacity", "0")
+      });
 
       let rightSvgContainer = d3.select(`#bar-chart-svg-${numId}b`)
          .attr("width", plotVars.plotWidth)
          .attr("height", plotVars.plotHeight)
          .style("background-color", "whitesmoke")
-         .style("border", "1px solid gray");
+         .style("border", "1px solid gray")
+         //insert grid lines on mouseover
+         .on("mouseover", function (d, i) {
+            d3.select(`.bar-chart-x-axis-grid-${numId}b`).transition()
+            .style("opacity", "0.8")
+         })
+         .on("mouseout", function (d, i) {
+            d3.select(`.bar-chart-x-axis-grid-${numId}b`).transition()
+            .style("opacity", "0")
+      });
       
       //draw the rects for the left
       leftSvgContainer.selectAll("rect")
@@ -464,7 +482,7 @@ Promise.all([
          })
          .attr("height", yScaleA.bandwidth())  // <-- Band scales split a pixel range into equal-sized bands
          .style("fill", arrayVal => violet_red_colors[arrayVal.key])
-         .style("opacity", 0.9)
+         .style("opacity", 0.85)
          .style("stroke", "white");
 
       //draw the rects for the right
@@ -481,7 +499,7 @@ Promise.all([
          })
          .attr("height", yScaleB.bandwidth())  // <-- Band scales split a pixel range into equal-sized bands
          .style("fill", arrayVal => violet_red_colors[arrayVal.key])
-         .style("opacity", 0.9)
+         .style("opacity", 0.85)
          .style("stroke", "white");
       
       drawTicks(leftSvgContainer, rightSvgContainer, xScaleA, xScaleB, numId);
@@ -491,7 +509,10 @@ Promise.all([
       //Static tick-making and explainers
       let xAxisA = d3.axisBottom(xScaleA);
       let xAxisB = d3.axisBottom(xScaleB);
-     
+
+      let xAxisAGrid = d3.axisBottom(xScaleA).tickSize(-(plotVars.plotHeight)).tickFormat("").ticks(12);
+      let xAxisBGrid = d3.axisBottom(xScaleB).tickSize(-(plotVars.plotHeight)).tickFormat("").ticks(12);
+
       leftPlotContainer.append("g")
          .attr("class", `bar-chart-x-axis-${numId}a`)
          .attr('transform', `translate(0, ${plotVars.plotHeight - plotVars.plotMarginBottom})`)
@@ -503,6 +524,18 @@ Promise.all([
          .attr('transform', `translate(0, ${plotVars.plotHeight - plotVars.plotMarginBottom})`)
          .style("font-family", "Georgia")
          .call(xAxisB);
+      
+      leftPlotContainer.append("g")
+         .attr("class", `bar-chart-x-axis-grid-${numId}a`)
+         .attr("transform", `translate(0, ${plotVars.plotHeight})`)
+         .style("opacity", 0)
+         .call(xAxisAGrid);
+      
+      rightPlotContainer.append("g")
+         .attr("class", `bar-chart-x-axis-grid-${numId}b`)
+         .attr("transform", `translate(0, ${plotVars.plotHeight})`)
+         .style("opacity", 0)
+         .call(xAxisBGrid);
 
       leftPlotContainer.append("text")
          .attr("y", plotVars.plotHeight - 3)
