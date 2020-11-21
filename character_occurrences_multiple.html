@@ -51,8 +51,9 @@ d3.json("/character_occurrences/Austen_Combined_character_occurrences.json").the
    const emma_char = nestedDataList[4];
    const persuasion_char = nestedDataList[5];
 
-   //Temporary until I implement toggle-able switching
-   let nestedData = []; //pride_and_prejudice_nested_paragraphs;
+   const numLineCharts = 6;
+
+   let nestedData = [];
 
    const plotVars = ({
       plotWidth: 630,   // Width of plot region
@@ -62,62 +63,6 @@ d3.json("/character_occurrences/Austen_Combined_character_occurrences.json").the
    });
 
    rainbow_colors = ["ff0000", "f57f17", "ffd600", "ide4bd", "19aade", "142459", "7d3ac1", "cc0099", "663300", "ff99ff", "9e9e9e"];
-   
-   let numParagraphsWithKeyword = 0;
-   let numKeywordFrequency = 0;
-   function containsWord(paragraph, word) {
-      let regexp = new RegExp(`\\b${word}\\b`, "gi"); //\\b + word + \\b for word + escapes, use global search and i for keyword frequency
-      
-      paragraphMatches = paragraph.match(regexp);
-      if(paragraphMatches != null) {
-         numKeywordFrequency += paragraph.match(regexp).length;
-         return true;
-      }
-      return false;
-   }
-
-   function drawTicks(plotContainer, yAxisGrid, yAxis, xAxis, id) {
-      plotContainer.append("g")
-         .attr("class", `y-axis-grid-${id}`)
-         .attr("transform", `translate(${plotVars.plotMarginLeft - plotVars.plotMargin/2 }, 0)`)
-         .style("opacity", 0)
-         .call(yAxisGrid);
-      
-      plotContainer.append("g")
-         .attr("class", `y-axis-${id}`)
-         .attr("transform", `translate(${plotVars.plotMargin*1.5}, 0)`)
-         .style("font-family", "Georgia")
-         .call(yAxis);
-      
-      plotContainer.append("g")
-         .attr("class", `x-axis-${id}`)
-         .attr('transform', `translate(0,${ plotVars.plotHeight - plotVars.plotMargin })`)
-         .style("font-family", "Georgia")
-         .call(xAxis);
-
-      plotContainer.append("text")
-         .attr("y", plotVars.plotHeight / 3)
-         .attr("x", 10)
-         .attr("style", "writing-mode: tb; glyph-orientation-vertical: 90")
-         .attr("dy", "1em")
-         .style("font-family", "Georgia")
-         .style("font-size", 12)
-         .style("text-anchor", "middle")
-         .text("Character Mentions per Chapter");
-      
-      plotContainer.append("text")
-         .attr("y", 15)
-         .attr("x", (plotVars.plotWidth + plotVars.plotMargin) / 2)
-         .attr("dy", "1em")
-         .style("font-family", "Georgia")
-         .style("font-size", 16)
-         .style("text-anchor", "middle")
-         .text(function() {
-            title_id = id[id.length - 1];
-            return titles[title_id];
-         });
-
-   };
       
 ////*Search function*////
    let keywordSearchBar = document.getElementById("keywordSearch");
@@ -153,7 +98,7 @@ d3.json("/character_occurrences/Austen_Combined_character_occurrences.json").the
    });
 
 ////*Rendering portion*////
-   function initializeSingleRender(id, nestedDataLocal) {
+   function initializeSingleRender(numId, nestedDataLocal) {
       //Redefine constants
       nestedData = nestedDataLocal;
       let xScale = d3.scaleLinear(nestedData)
@@ -176,18 +121,18 @@ d3.json("/character_occurrences/Austen_Combined_character_occurrences.json").the
       //Add svg container
       let svgContainer = d3.select("body")
       .append("svg")
-      .attr("id", `svg-${id}`)
+      .attr("id", `line-chart-svg-${numId}`)
       .attr("width", plotVars.plotWidth)
       .attr("height", plotVars.plotHeight)
       .style("background-color", "white")
       .style("border", "1px solid gray")
       //insert grid lines on mouseover
       .on("mouseover", function (d, i) {
-            d3.select(`.y-axis-grid-${id}`).transition()
+            d3.select(`.line-chart-y-axis-grid-${numId}`).transition()
                .style("opacity", "0.8")
       })
       .on("mouseout", function (d, i) {
-            d3.select(`.y-axis-grid-${id}`).transition()
+            d3.select(`.line-chart-y-axis-grid-${numId}`).transition()
                .style("opacity", "0")
       })
 
@@ -195,8 +140,10 @@ d3.json("/character_occurrences/Austen_Combined_character_occurrences.json").the
          .selectAll("path")
          .data(nestedData)
          .join("path")
-         .attr("class", "line-chart")             
-         .attr("class", "line-chart")
+         .attr("class", "line-chart-path")             
+         .attr("id", function(indiv_char, index) {
+            return `line-chart-path-${numId}-char-${index}`;
+         })
          .attr("stroke-width", 1)
          .attr("d", indiv_char => lineGenerator(indiv_char.values))
          .attr("fill", "none")  // Do not fill the area defined by the path
@@ -204,11 +151,11 @@ d3.json("/character_occurrences/Austen_Combined_character_occurrences.json").the
             return `#${rainbow_colors[i]}`;// Set a color for the line (The maps for color is in 'color')
          })
          .on("mouseover", function (d, i) {
-            d3.select(`.y-axis-grid-${id}`).transition()
+            d3.select(`.line-chart-y-axis-grid-${numId}`).transition()
                .style("opacity", "0.8")
          })
          .on("mouseout", function (d, i) {
-               d3.select(`.y-axis-grid-${id}`).transition()
+               d3.select(`.line-chart-y-axis-grid-${numId}`).transition()
                   .style("opacity", "0")
          }); 
 
@@ -231,12 +178,53 @@ d3.json("/character_occurrences/Austen_Combined_character_occurrences.json").the
       //       return "";
       //    });
 
-      drawTicks(svgContainer, yAxisGrid, yAxis, xAxis, id);
+      drawTicks(svgContainer, yAxisGrid, yAxis, xAxis, numId);
    }
 
+   function drawTicks(plotContainer, yAxisGrid, yAxis, xAxis, numId) {
+      plotContainer.append("g")
+         .attr("class", `line-chart-y-axis-grid-${numId}`)
+         .attr("transform", `translate(${plotVars.plotMarginLeft - plotVars.plotMargin/2 }, 0)`)
+         .style("opacity", 0)
+         .call(yAxisGrid);
+      
+      plotContainer.append("g")
+         .attr("class", `line-chart-y-axis-${numId}`)
+         .attr("transform", `translate(${plotVars.plotMargin*1.5}, 0)`)
+         .style("font-family", "Georgia")
+         .call(yAxis);
+      
+      plotContainer.append("g")
+         .attr("class", `line-chart-x-axis-${numId}`)
+         .attr('transform', `translate(0,${ plotVars.plotHeight - plotVars.plotMargin })`)
+         .style("font-family", "Georgia")
+         .call(xAxis);
 
-   for(let i=0; i < nestedDataList.length; i++) {
-      initializeSingleRender(`line-chart-${i}`, nestedDataList[i]);
+      plotContainer.append("text")
+         .attr("y", plotVars.plotHeight / 3)
+         .attr("x", 10)
+         .attr("style", "writing-mode: tb; glyph-orientation-vertical: 90")
+         .attr("dy", "1em")
+         .style("font-family", "Georgia")
+         .style("font-size", 12)
+         .style("text-anchor", "middle")
+         .text("Character Mentions per Chapter");
+      
+      plotContainer.append("text")
+         .attr("y", 15)
+         .attr("x", (plotVars.plotWidth + plotVars.plotMargin) / 2)
+         .attr("dy", "1em")
+         .style("font-family", "Georgia")
+         .style("font-size", 16)
+         .style("text-anchor", "middle")
+         .text(function() {
+            title_id = numId - 1;
+            return titles[title_id];
+         });
+   };
+
+   for(let i=1; i <= numLineCharts; i++) {
+      initializeSingleRender(i, nestedDataList[i-1]);
    }
 });
 
