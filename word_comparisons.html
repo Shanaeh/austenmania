@@ -52,7 +52,7 @@ line {
    justify-content: space-between;
    align-items: center;
    padding-top: 3px;
-   padding-bottom: 3px;
+   padding-bottom: 5px;
 }
 
 .bar-chart-words {
@@ -117,15 +117,83 @@ line {
       <svg id="bar-chart-svg-1a"> </svg>
          <div class="bar-chart-words-container-1"><span class="bar-chart-words-message">Select and enter new terms, then hit update all</span>
             <input type="text" value="marriage" class="bar-chart-words" id="bar-chart-words-1-0">
-            <input type="text" value="income" class="bar-chart-words" id="bar-chart-words-1-1">
+            <input type="text" value="estate" class="bar-chart-words" id="bar-chart-words-1-1">
             <input type="text" value="money" class="bar-chart-words" id="bar-chart-words-1-2">
-            <input type="text" value="pounds" class="bar-chart-words" id="bar-chart-words-1-3">
+            <input type="text" value="letter" class="bar-chart-words" id="bar-chart-words-1-3">
             <input type="text" value="family" class="bar-chart-words" id="bar-chart-words-1-4">
             <button type="button" class="bar-chart-button" id="bar-chart-word-search-button-1" onclick="searchKeywordsOnClick1()">Update all</button> 
          </div>
       <svg id="bar-chart-svg-1b"> </svg>
    </div>
 
+   <div class="bar-chart-container-dropdown-2">
+      <select class="bar-chart-dropdown" id="bar-chart-dropdown-2a">
+         <option value=0 selected=0>Sense and Sensibility</option>
+         <option value=1>Pride and Prejudice</option>
+         <option value=2>Northanger Abbey</option>
+         <option value=3>Mansfield Park</option>
+         <option value=4>Emma</option>
+         <option value=5>Persuasion</option>
+         <option value=6>All novels</option>
+      </select>
+      <span class="bar-chart-dropdown-spacer">Terms</span>
+      <select class="bar-chart-dropdown" id="bar-chart-dropdown-2b">
+         <option value="0">Sense and Sensibility</option>
+         <option value="1">Pride and Prejudice</option>
+         <option value="2">Northanger Abbey</option>
+         <option value="3" selected=3>Mansfield Park</option>
+         <option value="4">Emma</option>
+         <option value="5">Persuasion</option>
+         <option value="6">All novels</option>
+      </select>
+   </div>
+   <div class="bar-chart-container-2">
+      <svg id="bar-chart-svg-2a"> </svg>
+         <div class="bar-chart-words-container-2"><span class="bar-chart-words-message">Select and enter new terms, then hit update all</span>
+            <input type="text" value="marriage" class="bar-chart-words" id="bar-chart-words-2-0">
+            <input type="text" value="parsonage" class="bar-chart-words" id="bar-chart-words-2-1">
+            <input type="text" value="cousins" class="bar-chart-words" id="bar-chart-words-2-2">
+            <input type="text" value="sisters" class="bar-chart-words" id="bar-chart-words-2-3">
+            <input type="text" value="engagement" class="bar-chart-words" id="bar-chart-words-2-4">
+            <button type="button" class="bar-chart-button" id="bar-chart-word-search-button-2" onclick="searchKeywordsOnClick2()">Update all</button> 
+         </div>
+      <svg id="bar-chart-svg-2b"> </svg>
+   </div>
+
+   <div class="bar-chart-container-dropdown-3">
+      <select class="bar-chart-dropdown" id="bar-chart-dropdown-3a">
+         <option value=0>Sense and Sensibility</option>
+         <option value=1>Pride and Prejudice</option>
+         <option value=2>Northanger Abbey</option>
+         <option value=3>Mansfield Park</option>
+         <option value=4>Emma</option>
+         <option value=5 selected=5>Persuasion</option>
+         <option value=6>All novels</option>
+      </select>
+      <span class="bar-chart-dropdown-spacer">Terms</span>
+      <select class="bar-chart-dropdown" id="bar-chart-dropdown-3b">
+         <option value="0">Sense and Sensibility</option>
+         <option value="1">Pride and Prejudice</option>
+         <option value="2" selected=2>Northanger Abbey</option>
+         <option value="3">Mansfield Park</option>
+         <option value="4">Emma</option>
+         <option value="5">Persuasion</option>
+         <option value="6">All novels</option>
+      </select>
+   </div>
+
+   <div class="bar-chart-container-3">
+      <svg id="bar-chart-svg-3a"> </svg>
+         <div class="bar-chart-words-container-3"><span class="bar-chart-words-message">Select and enter new terms, then hit update all</span>
+            <input type="text" value="marriage" class="bar-chart-words" id="bar-chart-words-3-0">
+            <input type="text" value="letter" class="bar-chart-words" id="bar-chart-words-3-1">
+            <input type="text" value="love" class="bar-chart-words" id="bar-chart-words-3-2">
+            <input type="text" value="friend" class="bar-chart-words" id="bar-chart-words-3-3">
+            <input type="text" value="go" class="bar-chart-words" id="bar-chart-words-3-4">
+            <button type="button" class="bar-chart-button" id="bar-chart-word-search-button-3" onclick="searchKeywordsOnClick3()">Update all</button> 
+         </div>
+      <svg id="bar-chart-svg-3b"> </svg>
+   </div>
 
 
 </div>
@@ -135,10 +203,10 @@ line {
 
    ////*HTML button helper, outside d3 file sharing*////
    let selectedKeywordsBarChart = [
-      ["marriage", "income", "money", "pounds", "family"],
-      [],
-      []
-   ];
+      ["marriage", "estate", "money", "letter", "family"],
+      ["marriage", "parsonage", "cousins", "sisters", "engagement"],
+      ["marriage", "letter", "love", "friend", "go"]
+      ];
    let currBarChartId = 0;
    
    const numKeywords = 5;
@@ -186,88 +254,28 @@ Promise.all([
    const plotVars = ({
       plotWidth: 300,   // Width of plot region
       plotHeight: 260,  // Height of plot region
-      plotMargin: 30,   // Margin space for axes and their labels
-      plotMarginLeft: 60   // Margin space for axes and their labels
+      plotMargin: 15,   // Margin space for axes and their labels
+      plotMarginTop: 35,   // Margin space for axes and their labels
+      plotMarginBottom: 30   // Margin space for axes and their labels
    });
 
-   rainbow_colors = ["ff0000", "f57f17", "ffd600", "ide4bd", "19aade", "142459", "7d3ac1", "cc0099", "663300", "ff99ff", "9e9e9e"];
-   
-   let numParagraphsWithKeyword = 0;
-   let numKeywordFrequency = 0;
-   function containsWord(paragraph, word) {
-      let regexp = new RegExp(`\\b${word}\\b`, "gi"); //\\b + word + \\b for word + escapes, use global search and i for keyword frequency
-      
-      paragraphMatches = paragraph.match(regexp);
-      if(paragraphMatches != null) {
-         numKeywordFrequency += paragraph.match(regexp).length;
-         return true;
-      }
-      return false;
-   }
+   violet_red_colors = ["#EF224B", "red", "#C20032", "deeppink", "#c71585"];
 
-   function drawTicks(plotContainer, yAxisGrid, yAxis, id) {
-      plotContainer.append("g")
-         .attr("class", `y-axis-grid-${id}`)
-         .attr("transform", `translate(${plotVars.plotMarginLeft - plotVars.plotMargin/2 }, 0)`)
-         .style("opacity", 0)
-         .call(yAxisGrid);
-      
-      plotContainer.append("g")
-         .attr("class", `y-axis-${id}`)
-         .attr("transform", `translate(${plotVars.plotMargin*1.5}, 0)`)
-         .style("font-family", "Georgia")
-         .call(yAxis);
-      
-      plotContainer.append("g")
-         .attr("class", `x-axis-${id}`)
-         .attr('transform', `translate(0,${ plotVars.plotHeight - plotVars.plotMargin })`)
-         .style("font-family", "Georgia")
-         .call(xAxis);
-
-      plotContainer.append("text")
-         .attr("y", plotVars.plotHeight / 3)
-         .attr("x", 10)
-         .attr("style", "writing-mode: tb; glyph-orientation-vertical: 90")
-         .attr("dy", "1em")
-         .style("font-family", "Georgia")
-         .style("font-size", 12)
-         .style("text-anchor", "middle")
-         .text("Character Mentions per Chapter");
-      
-      plotContainer.append("text")
-         .attr("y", 14)
-         .attr("x", (plotVars.plotWidth + plotVars.plotMargin) / 2)
-         .attr("dy", "1em")
-         .style("font-family", "Georgia")
-         .style("font-size", 16)
-         .style("text-anchor", "middle")
-         .text(function() {
-            title_id = id[id.length - 1];
-            return titles[title_id];
-         });
-
-   };
-      
-////*Search function*////
-   d3.select(`#bar-chart-word-search-button-${currBarChartId+1}`).on("click", function() {
-      //insert code to redraw bars
-      d3.select("#bar-chart-svg-1a")
-      .style("background-color", "green");
-
-      d3.selectAll("rect")
-      .attr("fill", function(paragraph) { //d3 still saves the .each binding of each rect to paragraph, gosh I love it when things work 
-         if(containsWord(paragraph.toLowerCase(), selectedKeyword)) {
-            numParagraphsWithKeyword++;
-            return "hotpink";    
-         } else {
-            return "forestgreen";
-         }
-      })
+   d3.select(`#bar-chart-word-search-button-1`).on("click", function() {
+      updateFunction(currBarChartId);
+   });
+   d3.select(`#bar-chart-word-search-button-2`).on("click", function() {
+      updateFunction(currBarChartId);
+   });
+   d3.select(`#bar-chart-word-search-button-3`).on("click", function() {
+      updateFunction(currBarChartId);
    });
 
-////*Rendering portion*////
-   function initializeSingleRender(numId) {
-      //Redefine constants, oops nnumId is really the bar chart 1, 2, or 3; subtract 1 for array searching
+////*Update function*////
+   function updateFunction(currBarChartId) {
+//Todo: refactor into smaller chunks, ah well it works for right now; error checking
+      numId = currBarChartId+1;
+      //Redefine constants, oops numId is really the bar chart 1, 2, or 3; subtract 1 for array searching
       let leftIndex = document.getElementById(`bar-chart-dropdown-${numId}a`).value;
       leftData = nestedDataList[leftIndex];
 
@@ -288,79 +296,233 @@ Promise.all([
             let freqPer10k = parseFloat(foundWordLeft.frequency) / parseFloat(word_count_numbers[leftIndex].divider);
             leftChartVals[i] = {"key": i, "value": freqPer10k };
          } else {
-            leftChartVals[i] = -1;
+            leftChartVals[i] = 0;
          }
          if(foundWordRight) {
             let freqPer10k = parseFloat(foundWordRight.frequency) / parseFloat(word_count_numbers[rightIndex].divider);
             rightChartVals[i] = {"key": i, "value": freqPer10k };
          } else {
-            rightChartVals[i] = -1;
+            rightChartVals[i] = 0;
+         }
+      }
+
+      //redefine the xscales...
+      let xMax = Math.ceil(Math.max(d3.max(leftChartVals, d => d.value), d3.max(rightChartVals, d=> d.value))); //use same baseline for comparison
+      let xScaleA = d3.scaleLinear()
+        .domain([0, xMax])
+        .range([plotVars.plotWidth, plotVars.plotMargin])
+
+      let yScaleA = d3.scaleBand()
+        .domain(leftChartVals.map(d => d.key)) //Per # of terms
+        .range([plotVars.plotMarginTop, plotVars.plotHeight - plotVars.plotMarginBottom - 2]); //plot top to bottom
+      
+      let xScaleB = d3.scaleLinear()
+        .domain([0, xMax])
+        .range([0, plotVars.plotWidth - plotVars.plotMargin])
+
+      let yScaleB = d3.scaleBand()
+        .domain(rightChartVals.map(d => d.key)) //Per # of terms
+        .range([plotVars.plotMarginTop, plotVars.plotHeight - plotVars.plotMarginBottom - 2]); //plot top to bottom
+      
+      //Redraw svg containers
+      let leftSvgContainer = d3.select(`#bar-chart-svg-${numId}a`);
+      let rightSvgContainer = d3.select(`#bar-chart-svg-${numId}b`);
+      
+      //redraw the rects for the left
+      leftSvgContainer.selectAll("rect")
+         .data(leftChartVals)
+         .join("rect")
+         .attr("id", function(arrayVal, index) {
+            return `bar-chart-svg-${numId}a-${index}`;
+         })
+         .attr("x", function(arrayVal) { 
+            return xScaleA(arrayVal.value);
+         })
+         .attr("y", arrayVal => yScaleA(arrayVal.key))
+         .attr("width", function(arrayVal) {
+            let width = xScaleA(0) - xScaleA(arrayVal.value); 
+            if(width) return width;
+            else {
+               return 0; //falsy updates
+            }
+         })
+         .attr("height", yScaleA.bandwidth())  // <-- Band scales split a pixel range into equal-sized bands
+         .style("fill", arrayVal => violet_red_colors[arrayVal.key])
+         .style("opacity", 0.9)         
+         .style("stroke", "white");
+
+      //redraw the rects for the right
+      rightSvgContainer.selectAll("rect")
+         .data(rightChartVals)
+         .join("rect")
+         .attr("id", function(arrayVal, index) {
+            return `bar-chart-svg-${numId}b-${index}`;
+         })
+         .attr("x", 0)
+         .attr("y", arrayVal => yScaleB(arrayVal.key))
+         .attr("width", function(arrayVal) {
+            let width = xScaleB(arrayVal.value); 
+            if(width) return width;
+            else {
+               return 0; //falsy updates
+            }
+         })
+         .attr("height", yScaleB.bandwidth())  // <-- Band scales split a pixel range into equal-sized bands
+         .style("fill", arrayVal => violet_red_colors[arrayVal.key])
+         .style("opacity", 0.9)         
+         .style("stroke", "white");
+
+      let xAxisA = d3.axisBottom(xScaleA);
+      let xAxisB = d3.axisBottom(xScaleB);
+      //transition scales
+      leftSvgContainer.select(`.bar-chart-x-axis-${numId}a`)
+      .attr('transform', `translate(0, ${plotVars.plotHeight - plotVars.plotMarginBottom})`)
+      .transition(0.8)
+      .call(xAxisA);
+
+      rightSvgContainer.select(`.bar-chart-x-axis-${numId}b`)
+      .attr('transform', `translate(0, ${plotVars.plotHeight - plotVars.plotMarginBottom})`)
+      .transition(0.8)
+      .call(xAxisB);
+   };
+   
+
+////*Rendering portion*////
+   function initializeSingleRender(numId) {
+      //Redefine constants, oops numId is really the bar chart 1, 2, or 3; subtract 1 for array searching
+      let leftIndex = document.getElementById(`bar-chart-dropdown-${numId}a`).value;
+      leftData = nestedDataList[leftIndex];
+
+      let rightIndex = document.getElementById(`bar-chart-dropdown-${numId}b`).value;
+      rightData = nestedDataList[rightIndex];
+
+      //Look up and fill in values from word frequency file
+      let leftChartVals = [];
+      let rightChartVals = [];
+      for(let i=0; i < numKeywords; i++) {
+         let wordToFindLeft = selectedKeywordsBarChart[numId-1][i];
+         let wordToFindRight = selectedKeywordsBarChart[numId-1][i];
+
+         let foundWordLeft = leftData.filter(obj => obj.word === wordToFindLeft)[0];
+         let foundWordRight = rightData.filter(obj => obj.word === wordToFindRight)[0];
+
+         if(foundWordLeft) {
+            let freqPer10k = parseFloat(foundWordLeft.frequency) / parseFloat(word_count_numbers[leftIndex].divider);
+            leftChartVals[i] = {"key": i, "value": freqPer10k };
+         } else {
+            leftChartVals[i] = 0;
+         }
+         if(foundWordRight) {
+            let freqPer10k = parseFloat(foundWordRight.frequency) / parseFloat(word_count_numbers[rightIndex].divider);
+            rightChartVals[i] = {"key": i, "value": freqPer10k };
+         } else {
+            rightChartVals[i] = 0;
          }
       }
 
       let xMax = Math.ceil(Math.max(d3.max(leftChartVals, d => d.value), d3.max(rightChartVals, d=> d.value))); //use same baseline for comparison
       let xScaleA = d3.scaleLinear()
         .domain([0, xMax])
-        .range([plotVars.plotWidth, 0])
+        .range([plotVars.plotWidth, plotVars.plotMargin])
 
       let yScaleA = d3.scaleBand()
         .domain(leftChartVals.map(d => d.key)) //Per # of terms
-        .range([plotVars.plotMargin, plotVars.plotHeight - plotVars.plotMargin]); //plot top to bottom
+        .range([plotVars.plotMarginTop, plotVars.plotHeight - plotVars.plotMarginBottom - 2]); //plot top to bottom
       
-      //Static tick-making and explainers
-      //let xAxis = d3.axisBottom(xScale);
-      //let yAxisGrid = d3.axisLeft(yScale).tickSize(-(plotVars.plotWidth + plotVars.plotMargin/2)).tickFormat("").ticks(12);
-         
+      let xScaleB = d3.scaleLinear()
+        .domain([0, xMax])
+        .range([0, plotVars.plotWidth - plotVars.plotMargin])
+
+      let yScaleB = d3.scaleBand()
+        .domain(rightChartVals.map(d => d.key)) //Per # of terms
+        .range([plotVars.plotMarginTop, plotVars.plotHeight - plotVars.plotMarginBottom - 2]); //plot top to bottom
+      
       //Redraw svg containers
       let leftSvgContainer = d3.select(`#bar-chart-svg-${numId}a`)
       .attr("width", plotVars.plotWidth)
       .attr("height", plotVars.plotHeight)
       .style("background-color", "whitesmoke")
-      .style("border", "1px solid gray")
-         //insert grid lines on mouseover
-         .on("mouseover", function (d, i) {
-               d3.select(`.y-axis-grid-${numId}a`).transition()
-                  .style("opacity", "0.8")
-         })
-         .on("mouseout", function (d, i) {
-               d3.select(`.y-axis-grid-${numId}a`).transition()
-                  .style("opacity", "0")
-         });
+      .style("border", "1px solid gray");
 
       let rightSvgContainer = d3.select(`#bar-chart-svg-${numId}b`)
          .attr("width", plotVars.plotWidth)
          .attr("height", plotVars.plotHeight)
          .style("background-color", "whitesmoke")
-         .style("border", "1px solid gray")
-         //insert grid lines on mouseover
-         .on("mouseover", function (d, i) {
-               d3.select(`.y-axis-grid-${numId}b`).transition()
-                  .style("opacity", "0.8")
-         })
-         .on("mouseout", function (d, i) {
-               d3.select(`.y-axis-grid-${numId}b`).transition()
-                  .style("opacity", "0")
-         });
+         .style("border", "1px solid gray");
       
-      //draw the rects
-      leftSvgContainer.selectAll('rect')
+      //draw the rects for the left
+      leftSvgContainer.selectAll("rect")
          .data(leftChartVals)
-         .join('rect')
-         .attr('x', arrayVal => xScaleA(arrayVal.value))
-         .attr('y', arrayVal => yScaleA(arrayVal.key))
-         .attr('width', function(arrayVal) {
+         .join("rect")
+         .attr("id", function(arrayVal) {
+            return `bar-chart-svg-${numId}a-${arrayVal.key}`;
+         })
+         .attr("x", arrayVal => xScaleA(arrayVal.value))
+         .attr("y", arrayVal => yScaleA(arrayVal.key))
+         .attr("width", function(arrayVal) {
             return xScaleA(0) - xScaleA(arrayVal.value); 
          })
-         .attr('height', yScaleA.bandwidth())  // <-- Band scales split a pixel range into equal-sized bands
-         .style('fill', arrayVal => "red")
-         .style('stroke', 'white');
+         .attr("height", yScaleA.bandwidth())  // <-- Band scales split a pixel range into equal-sized bands
+         .style("fill", arrayVal => violet_red_colors[arrayVal.key])
+         .style("opacity", 0.9)
+         .style("stroke", "white");
 
-
-      //drawTicks(svgContainer, yAxisGrid, yAxis, xAxis, id);
+      //draw the rects for the right
+      rightSvgContainer.selectAll("rect")
+         .data(rightChartVals)
+         .join("rect")
+         .attr("id", function(arrayVal) {
+            return `bar-chart-svg-${numId}b-${arrayVal.key}`;
+         })
+         .attr("x", 0)
+         .attr("y", arrayVal => yScaleB(arrayVal.key))
+         .attr("width", function(arrayVal) {
+            return xScaleB(arrayVal.value); 
+         })
+         .attr("height", yScaleB.bandwidth())  // <-- Band scales split a pixel range into equal-sized bands
+         .style("fill", arrayVal => violet_red_colors[arrayVal.key])
+         .style("opacity", 0.9)
+         .style("stroke", "white");
+      
+      drawTicks(leftSvgContainer, rightSvgContainer, xScaleA, xScaleB, numId);
    }
 
+   function drawTicks(leftPlotContainer, rightPlotContainer, xScaleA, xScaleB, numId) {
+      //Static tick-making and explainers
+      let xAxisA = d3.axisBottom(xScaleA);
+      let xAxisB = d3.axisBottom(xScaleB);
+     
+      leftPlotContainer.append("g")
+         .attr("class", `bar-chart-x-axis-${numId}a`)
+         .attr('transform', `translate(0, ${plotVars.plotHeight - plotVars.plotMarginBottom})`)
+         .style("font-family", "Georgia")
+         .call(xAxisA);
 
-   for(let i=1; i <= 1; i++) {
+      rightPlotContainer.append("g")
+         .attr("class", `bar-chart-x-axis-${numId}b`)
+         .attr('transform', `translate(0, ${plotVars.plotHeight - plotVars.plotMarginBottom})`)
+         .style("font-family", "Georgia")
+         .call(xAxisB);
+
+      leftPlotContainer.append("text")
+         .attr("y", plotVars.plotHeight - 3)
+         .attr("x", plotVars.plotWidth / 2)
+         .style("font-family", "Georgia")
+         .style("font-size", 11)
+         .style("text-anchor", "middle")
+         .text("Term frequency per 10K words");
+      
+      rightPlotContainer.append("text")
+         .attr("y", plotVars.plotHeight - 3)
+         .attr("x", plotVars.plotWidth / 2)
+         .style("font-family", "Georgia")
+         .style("font-size", 11)
+         .style("text-anchor", "middle")
+         .text("Term frequency per 10K words");
+   };
+      
+
+   for(let i=1; i <= 3; i++) {
       initializeSingleRender(i);
    }
 });
