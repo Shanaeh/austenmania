@@ -22,6 +22,27 @@ line {
    font-size: 20px;
 }
 
+.paragraph-chart-concordance-0 {
+   display: flex;
+   overflow-y:auto;
+   flex-direction: row;
+}
+
+.paragraph-chart-concordance-0-chapter {
+   min-width: 300px;
+   max-width: 525px;
+   height: 600px;
+   padding: 10px;
+   overflow-y:auto;
+   border: 1px solid gray;
+}
+
+#concordance-chapter-keyword-frequency {
+   background-color: hotpink;
+   font-weight: bold;
+   padding: 3px;
+}
+
 </style>
 
 <body>
@@ -65,11 +86,19 @@ line {
          <p>Overall word frequency:  <span id="paragraph-chart-keyword-frequency0"></span>   
       </div>
 
-      <svg id="paragraph-chart-svg-0"> </svg>
+      <div class="paragraph-chart-concordance-0">
+         <svg id="paragraph-chart-svg-0"> </svg>
+
+         <div class="paragraph-chart-concordance-0-chapter">
+            <p><i>Select column on the left to navigate to another chapter. You may need to resize your window to view the full graph.</i></p>
+            <p>Word frequency in this chapter: <span id="concordance-chapter-keyword-frequency">   </span></p>
+            <h4>Chapter <span id="concordance-chapter-header">1</span></h4>
+            <div id="concordance-chapter-container">
+            </div>   
+         </div>
+      </div>
    </div>   
-   <!--TODO: fix-up styling-->   
 </div>
-<!--Note: Needed to place the interactive button / input elements directly before d3 script to work-->
 
 <script>
    ////*HTML button helper, outside d3 file sharing*////
@@ -94,7 +123,7 @@ d3.json("/nested_paragraphs/Austen_Combined_nested_paragraphs.json").then(functi
    let nestedData = []; //pride_and_prejudice_nested_paragraphs;
 
    const plotVarsMulti = ({
-      plotWidth: 430,   // Width of plot region
+      plotWidth: 460,   // Width of plot region
       plotHeight: 330,  // Height of plot region
       plotMargin: 30,   // Margin space for axes and their labels
       plotMarginLeft: 60   // Margin space for axes and their labels
@@ -328,7 +357,7 @@ d3.json("/nested_paragraphs/Austen_Combined_nested_paragraphs.json").then(functi
    let nestedData0 = nestedDataList[selectedVal];      
 
    const plotVarsSingle = ({
-      plotWidth: 960,   // Width of plot region
+      plotWidth: 860,   // Width of plot region
       plotHeight: 600,  // Height of plot region
       plotMargin: 30,   // Margin space for axes and their labels
       plotMarginLeft: 60   // Margin space for axes and their labels
@@ -420,6 +449,9 @@ d3.json("/nested_paragraphs/Austen_Combined_nested_paragraphs.json").then(functi
          .enter()
          .append("g")
          .attr("class", "bar-chart-single-rects")
+         .attr("id", function(d, chapterInd) {
+            return `bar-chart-single-rects-chapter-${chapterInd}`;
+         })
          .each(function(d, chapterInd) {
             d3.select(this).selectAll("rect")
             .data(d.paragraphs)
@@ -434,14 +466,35 @@ d3.json("/nested_paragraphs/Austen_Combined_nested_paragraphs.json").then(functi
             .attr("rx", 1.5) //rounded corners for "friendly" feeling
             .attr("ry", 1.5)
             .attr("height", function(paragraph) { 
-               //let paragraphSize = Math.ceil(paragraph.length / 100) * 100 * 0.0031; //round to nearest 100 words
-               //const heightDividerConstant = plotVarsSingle.plotHeight / (1.2*maxNumParagraphs);
                return 3; //Math.min(paragraphSize * 0.2 * heightDividerConstant, heightDividerConstant);  
             })
             .attr("width", function(paragraph, parInd) { //vertical length of paragraph
                return plotVarsSingle.plotWidth / (1.2*numChapters0); //add space in-between
             })
             .attr("fill", "#d0f0c0")
+         }) 
+         //TODO: update so there's a rect layer on top for better clicking / accessibility
+         .on("click", function(clickEvent, chapter) {
+            d3.select("#concordance-chapter-header")
+               .text(chapter.chapter);
+            
+            d3.select("#concordance-chapter-container").selectAll("*").remove();
+            
+            let numKeywordsInChapter = 0;
+            for(let i=0; i < chapter.paragraphs.length; i++) {
+               let paragraphText = chapter.paragraphs[i];
+               
+               //now we do s's signature shenanigans of text-splitting
+               const paragraphArray = paragraphText.split(selectedKeyword0);
+               const paragraphHTML = paragraphArray.join(`<span style="background-color:hotpink">${selectedKeyword0}</span>`);
+               numKeywordsInChapter += paragraphArray.length - 1; //even on edge cases, there will be a period or something, except for first words...
+
+               d3.select("#concordance-chapter-container")
+                  .append("div")
+                  .html(paragraphHTML);
+            }
+            d3.select("#concordance-chapter-keyword-frequency")
+               .text(numKeywordsInChapter);
          });
 
       svgContainer.append("g")
@@ -509,7 +562,24 @@ d3.json("/nested_paragraphs/Austen_Combined_nested_paragraphs.json").then(functi
          .text("# of Paragraphs per Chapter");
 
    };
+   
    updateSingleRender(0, nestedDataList[document.getElementById("paragraph-chart-dropdown-0").value]); //start with P&P for sanity check
+   
+   //initialize concordance div
+   const firstChapter = nestedDataList[1][0];
+   let numKeyWordsInChapter1 = 0;
+   for(let i=0; i < firstChapter.paragraphs.length; i++) {
+      let paragraphText = firstChapter.paragraphs[i];
+      
+      const paragraphArray = paragraphText.split(selectedKeyword0);
+      const paragraphHTML = paragraphArray.join(`<span style="background-color:hotpink">${selectedKeyword0}</span>`);
+      numKeyWordsInChapter1 += paragraphArray.length - 1;
+      d3.select("#concordance-chapter-container")
+         .append("div")
+         .html(paragraphHTML);
+   }
+   d3.select("#concordance-chapter-keyword-frequency")
+      .text(numKeyWordsInChapter1);
 });
 
 </script>
