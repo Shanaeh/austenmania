@@ -107,10 +107,11 @@ line {
 </style>
 
 <body>
-<div>
-   <h3>austenmania</h3>
-</div>
 <script src="https://d3js.org/d3.v6.min.js"></script>
+
+<div>
+   <h1>austenmania</h1>
+</div>
 
    <div class="section-1">
       <input type="text" value="marriage" id="keywordSearch">
@@ -152,7 +153,7 @@ line {
                <svg id="paragraph-chart-svg-0"> </svg>
 
                <div class="paragraph-chart-concordance-0-chapter">
-                  <p><i>Select column on the left to navigate to another chapter. You may need to resize your window to view the full graph.</i></p>
+                  <p><i>Click a column on the left to navigate to another chapter. You may need to resize your window to view the full graph.</i></p>
                   <p>Word frequency in this chapter: <span id="concordance-chapter-keyword-frequency">   </span></p>
                   <h4>Chapter <span id="concordance-chapter-header">1</span></h4>
                   <div id="concordance-chapter-container">
@@ -1047,7 +1048,7 @@ Promise.all([
          })
          .attr("height", yScaleA.bandwidth())  // <-- Band scales split a pixel range into equal-sized bands
          .style("fill", arrayVal => violet_red_colors[arrayVal.key])
-         .style("opacity", 0.85)
+         .style("opacity", 0.75)
          .style("stroke", "white");
 
       //draw the rects for the right
@@ -1064,7 +1065,7 @@ Promise.all([
          })
          .attr("height", yScaleB.bandwidth())  // <-- Band scales split a pixel range into equal-sized bands
          .style("fill", arrayVal => violet_red_colors[arrayVal.key])
-         .style("opacity", 0.85)
+         .style("opacity", 0.75)
          .style("stroke", "white");
       
       drawTicks(leftSvgContainer, rightSvgContainer, xScaleA, xScaleB, numId);
@@ -1147,7 +1148,7 @@ d3.json("/character_occurrences/Austen_Combined_character_occurrences.json").the
    let nestedData = [];
 
    const plotVars = ({
-      plotWidth: 750,   // Width of plot region
+      plotWidth: 700,   // Width of plot region
       plotHeight: 500,  // Height of plot region
       plotMargin: 30,   // Margin space for axes and their labels
       plotMarginLeft: 40,
@@ -1203,7 +1204,7 @@ d3.json("/character_occurrences/Austen_Combined_character_occurrences.json").the
          .attr("id", function(indiv_char, index) {
             return `line-chart-path-${numId}-char-${index}`;
          })
-         .attr("stroke-width", 1.5)
+         .attr("stroke-width", 2)
          .attr("d", indiv_char => lineGenerator(indiv_char.values))
          .attr("fill", "none")  // Do not fill the area defined by the path
          .attr("stroke", function(indiv_char, i) {
@@ -1254,7 +1255,8 @@ d3.json("/character_occurrences/Austen_Combined_character_occurrences.json").the
                .attr("width", 145)
                .attr("stroke-width", "1px")
                .attr("stroke", "#C0C0C0")
-               .attr("fill", "#F0F0F0");
+               .attr("fill", "#F0F0F0")
+               .attr("opacity", "0.8");
 
             d3.select(this).append("text")
                .attr("id", function(indivChar) {
