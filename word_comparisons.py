@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
-
+# Thanks to JD Porter / Literary Lab in 2019 for help with writing this script!
 import os, io, csv, string, scipy.stats
 
 #variables for this usage

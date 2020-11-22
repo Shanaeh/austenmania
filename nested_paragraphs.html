@@ -194,12 +194,6 @@ d3.json("/nested_paragraphs/Austen_Combined_nested_paragraphs.json").then(functi
    const yAxisGrid = d3.axisLeft(yScale).tickSize(-(plotVars.plotWidth + plotVars.plotMargin/2)).tickFormat("").ticks(15);
       
    function drawTicks(plotContainer) {
-
-      // plotContainer.append("g")
-      //    .attr("class", "x-axis")
-      //    .attr("transform", `translate(0,${ plotVars.plotHeight - plotVars.plotMargin })`)
-      //    .call(xAxis);
-
       plotContainer.append("g")
          .attr("class", "y-axis-grid")
          .attr("transform", `translate(${plotVars.plotMarginLeft - plotVars.plotMargin/2 }, 0)`)

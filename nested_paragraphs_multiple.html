@@ -15,6 +15,13 @@ line {
   shape-rendering: crispEdges;
 }
 
+.paragraph-chart-dropdown-0 {
+   width: 300px;
+   font-family: "Georgia";
+   font-weight: bold;
+   font-size: 20px;
+}
+
 </style>
 
 <body>
@@ -24,15 +31,47 @@ line {
 <script src="https://d3js.org/d3.v6.min.js"></script>
 
 <input type="text" value="marriage" id="keywordSearch">
-<button type="button" id="keywordSearchButton" onclick="searchKeywordOnClick()">Search for a term</button> 
+<button type="button" id="keywordSearchButton" onclick="searchKeywordOnClick()">Search again</button> 
 <div>
-   <p>Paragraphs containing term: <span id="p-num-paragraphs-keyword"></span></p>
-   <p>Overall word frequency:  <span id="p-keyword-frequency"></span>
+   <h3>The multi-novel chart (for initial exploration)</h3>
+   <p>Paragraphs containing term: <span id="paragraph-chart-paragraphs-with-keyword"></span></p>
+   <p>Overall word frequency:  <span id="paragraph-chart-keyword-frequency"></span>
+   
+   <div class="paragraph-chart-multi-container">
+      <svg id="paragraph-chart-svg-1"> </svg>
+      <svg id="paragraph-chart-svg-2"> </svg>
+      <svg id="paragraph-chart-svg-3"> </svg>
+      <svg id="paragraph-chart-svg-4"> </svg>
+      <svg id="paragraph-chart-svg-5"> </svg>
+      <svg id="paragraph-chart-svg-6"> </svg>
+   </div>
+   <div>
+      Here's some explanation.
+   </div>
+
+   <div class="paragraph-chart-container-0">
+      <select class="paragraph-chart-dropdown-0" id="paragraph-chart-dropdown-0">
+         <option value=0>Sense and Sensibility</option>
+         <option value=1 selected=1>Pride and Prejudice</option>
+         <option value=2>Northanger Abbey</option>
+         <option value=3>Mansfield Park</option>
+         <option value=4>Emma</option>
+         <option value=5>Persuasion</option>
+      </select>
+      <div>
+         <input type="text" value="love" id="keywordSearch0">
+         <button type="button" id="keywordSearchButton0" onclick="searchKeywordOnClick0()">Search again, or update title</button> 
+         <p>Paragraphs containing term: <span id="paragraph-chart-paragraphs-with-keyword0"></span></p>
+         <p>Overall word frequency:  <span id="paragraph-chart-keyword-frequency0"></span>   
+      </div>
+
+      <svg id="paragraph-chart-svg-0"> </svg>
+   </div>   
+   <!--TODO: fix-up styling-->   
 </div>
 <!--Note: Needed to place the interactive button / input elements directly before d3 script to work-->
 
 <script>
-
    ////*HTML button helper, outside d3 file sharing*////
    let selectedKeyword = keywordSearch.value;
    function searchKeywordOnClick() {
@@ -54,9 +93,9 @@ d3.json("/nested_paragraphs/Austen_Combined_nested_paragraphs.json").then(functi
    //Temporary until I implement toggle-able switching
    let nestedData = []; //pride_and_prejudice_nested_paragraphs;
 
-   const plotVars = ({
-      plotWidth: 530,   // Width of plot region
-      plotHeight: 500,  // Height of plot region
+   const plotVarsMulti = ({
+      plotWidth: 430,   // Width of plot region
+      plotHeight: 330,  // Height of plot region
       plotMargin: 30,   // Margin space for axes and their labels
       plotMarginLeft: 60   // Margin space for axes and their labels
    });
@@ -79,47 +118,13 @@ d3.json("/nested_paragraphs/Austen_Combined_nested_paragraphs.json").then(functi
    function containsWord(paragraph, word) {
       let regexp = new RegExp(`\\b${word}\\b`, "gi"); //\\b + word + \\b for word + escapes, use global search and i for keyword frequency
       
-      paragraphMatches = paragraph.match(regexp);
+     let paragraphMatches = paragraph.match(regexp);
       if(paragraphMatches != null) {
          numKeywordFrequency += paragraph.match(regexp).length;
          return true;
       }
       return false;
    }
-
-   function drawTicks(plotContainer, yAxisGrid, yAxis, id) {
-      plotContainer.append("g")
-         .attr("class", `y-axis-grid-${id}`)
-         .attr("transform", `translate(${plotVars.plotMarginLeft - plotVars.plotMargin/2 }, 0)`)
-         .style("opacity", 0)
-         .call(yAxisGrid);
-      
-      plotContainer.append("g")
-         .attr("class", `y-axis-${id}`)
-         .attr("transform", `translate(${plotVars.plotMargin*1.5}, 0)`)
-         .style("font-family", "Georgia")
-         .call(yAxis);
-
-      plotContainer.append("text")
-         .attr("y", plotVars.plotHeight / 3)
-         .attr("x", 10)
-         .attr("style", "writing-mode: tb; glyph-orientation-vertical: 90")
-         .attr("dy", "1em")
-         .style("font-family", "Georgia")
-         .style("font-size", 12)
-         .style("text-anchor", "middle")
-         .text("# of Paragraphs per Chapter");
-      
-      plotContainer.append("text")
-         .attr("y", plotVars.plotMargin / 4)
-         .attr("x", (plotVars.plotWidth + plotVars.plotMargin) / 2)
-         .attr("dy", "1em")
-         .style("font-family", "Georgia")
-         .style("font-size", 12)
-         .style("text-anchor", "middle")
-         .text(titles[id]);
-
-   };
       
 ////*Search function*////
    let keywordSearchBar = document.getElementById("keywordSearch");
@@ -137,25 +142,25 @@ d3.json("/nested_paragraphs/Austen_Combined_nested_paragraphs.json").then(functi
          numParagraphsWithKeyword = 0;
          numKeywordFrequency = 0
 
-         d3.selectAll("rect")
+         d3.selectAll(".bar-chart-multi-rects rect")
          .attr("fill", function(paragraph) { //d3 still saves the .each binding of each rect to paragraph, gosh I love it when things work 
             if(containsWord(paragraph.toLowerCase(), selectedKeyword)) {
                numParagraphsWithKeyword++;
                return "hotpink";    
             } else {
-               return "forestgreen";
+               return "#d0f0c0";
             }
          })
 
-         d3.select("#p-num-paragraphs-keyword")
+         d3.select("#paragraph-chart-paragraphs-with-keyword")
          .text(numParagraphsWithKeyword)
 
-         d3.select("#p-keyword-frequency")
+         d3.select("#paragraph-chart-keyword-frequency")
          .text(numKeywordFrequency)
    });
 
 ////*Rendering portion*////
-   function initializeSingleRender(id, nestedDataLocal) {
+   function initializeSingleRender(numId, nestedDataLocal) {
       //Redefine constants
       nestedData = nestedDataLocal;
       numChapters = nestedData.length;
@@ -163,40 +168,39 @@ d3.json("/nested_paragraphs/Austen_Combined_nested_paragraphs.json").then(functi
 
       let xScale = d3.scaleLinear(nestedData)
         .domain([0, nestedData.length])
-        .range([plotVars.plotMarginLeft, plotVars.plotWidth])
+        .range([plotVarsMulti.plotMarginLeft, plotVarsMulti.plotWidth])
 
       let yScale = d3.scaleLinear(nestedData)
         .domain([0, Math.ceil(maxNumParagraphs/5)*5]) //Round to upper 5 for axis //103 wanted consistency for comparison across different novels, 103 is the max
-        .range([plotVars.plotMargin, plotVars.plotHeight - plotVars.plotMargin]);
+        .range([plotVarsMulti.plotMargin, plotVarsMulti.plotHeight - plotVarsMulti.plotMargin]);
   
       //Static tick-making and explainers
       let xAxis = d3.axisTop(xScale);
       let yAxis = d3.axisLeft(yScale);
-      let yAxisGrid = d3.axisLeft(yScale).tickSize(-(plotVars.plotWidth + plotVars.plotMargin/2)).tickFormat("").ticks(15);
+      let yAxisGrid = d3.axisLeft(yScale).tickSize(-(plotVarsMulti.plotWidth + plotVarsMulti.plotMargin/2)).tickFormat("").ticks(15);
          
-      //Add svg container
-      let svgContainer = d3.select("body")
-      .append("svg")
-      .attr("id", `svg-${id}`)
-      .attr("width", plotVars.plotWidth)
-      .attr("height", plotVars.plotHeight)
+      //Update placeholder svg containers
+      let svgContainer = d3.select(`#paragraph-chart-svg-${numId}`)
+      .attr("width", plotVarsMulti.plotWidth)
+      .attr("height", plotVarsMulti.plotHeight)
       .style("background-color", "white")
       .style("border", "1px solid gray")
       //insert grid lines on mouseover
       .on("mouseover", function (d, i) {
-            d3.select(`.y-axis-grid-${id}`).transition()
+            d3.select(`.paragraph-chart-y-axis-grid-${numId}`).transition()
                .style("opacity", "0.8")
       })
       .on("mouseout", function (d, i) {
-            d3.select(`.y-axis-grid-${id}`).transition()
+            d3.select(`.paragraph-chart-y-axis-grid-${numId}`).transition()
                .style("opacity", "0")
       })
 
       //Add svg data
-      svgContainer.selectAll("rect")
+      svgContainer.selectAll(".bar-chart-multi-rects")
          .data(nestedData)
          .enter()
          .append("g")
+         .attr("class", "bar-chart-multi-rects")
          .each(function(d, chapterInd) {
             d3.select(this).selectAll("rect")
             .data(d.paragraphs)
@@ -211,14 +215,14 @@ d3.json("/nested_paragraphs/Austen_Combined_nested_paragraphs.json").then(functi
             .attr("rx", 1.5) //rounded corners for "friendly" feeling
             .attr("ry", 1.5)
             .attr("height", function(paragraph) { 
-               let paragraphSize = Math.ceil(paragraph.length / 100) * 100 * 0.0031; //round to nearest 100 words
-               const heightDividerConstant = plotVars.plotHeight / (1.2*maxNumParagraphs);
-               return 2; //Math.min(paragraphSize * 0.2 * heightDividerConstant, heightDividerConstant);  
+               //let paragraphSize = Math.ceil(paragraph.length / 100) * 100 * 0.0031; //round to nearest 100 words
+               //const heightDividerConstant = plotVarsMulti.plotHeight / (1.2*maxNumParagraphs);
+               return 1.5; //Math.min(paragraphSize * 0.2 * heightDividerConstant, heightDividerConstant);  
             })
             .attr("width", function(paragraph, parInd) { //vertical length of paragraph
-               return plotVars.plotWidth / (1.2*numChapters); //add space in-between
+               return plotVarsMulti.plotWidth / (1.2*numChapters); //add space in-between
             })
-            .attr("fill", "forestgreen")
+            .attr("fill", "#d0f0c0")
          });
 
       svgContainer.append("g")
@@ -229,7 +233,7 @@ d3.json("/nested_paragraphs/Austen_Combined_nested_paragraphs.json").then(functi
          .attr("x", function(d, chapterInd) { 
             return xScale(chapterInd); 
          })
-         .attr("y", plotVars.plotMargin - 4)
+         .attr("y", plotVarsMulti.plotMargin - 4)
          .style("fill", "black")
          .style("font-family", "Georgia")
          .style("font-size", 8)
@@ -239,14 +243,273 @@ d3.json("/nested_paragraphs/Austen_Combined_nested_paragraphs.json").then(functi
             }
             return "";
          });
+      
+      drawTicks(svgContainer, yAxisGrid, yAxis, numId);
 
-      drawTicks(svgContainer, yAxisGrid, yAxis, id);
+      //initialize with first word
+      numParagraphsWithKeyword = 0;
+      numKeywordFrequency = 0;
+         d3.selectAll(".bar-chart-multi-rects rect")
+         .attr("fill", function(paragraph) { //d3 still saves the .each binding of each rect to paragraph, gosh I love it when things work 
+            if(containsWord(paragraph.toLowerCase(), selectedKeyword)) {
+               numParagraphsWithKeyword++;
+               return "hotpink";    
+            } else {
+               return "#d0f0c0";
+            }
+         })
+
+      d3.select("#paragraph-chart-paragraphs-with-keyword")
+         .text(numParagraphsWithKeyword)
+
+      d3.select("#paragraph-chart-keyword-frequency")
+         .text(numKeywordFrequency)
+   }
+   function drawTicks(plotContainer, yAxisGrid, yAxis, numId) {
+      plotContainer.append("g")
+         .attr("class", `paragraph-chart-y-axis-grid-${numId}`)
+         .attr("transform", `translate(${plotVarsMulti.plotMarginLeft - plotVarsMulti.plotMargin/2 }, 0)`)
+         .style("opacity", 0)
+         .call(yAxisGrid);
+      
+      plotContainer.append("g")
+         .attr("class", `paragraph-chart-y-axis-${numId}`)
+         .attr("transform", `translate(${plotVarsMulti.plotMargin*1.5}, 0)`)
+         .style("font-family", "Georgia")
+         .call(yAxis);
+
+      plotContainer.append("text")
+         .attr("y", plotVarsMulti.plotHeight / 3)
+         .attr("x", 10)
+         .attr("style", "writing-mode: tb; glyph-orientation-vertical: 90")
+         .attr("dy", "1em")
+         .style("font-family", "Georgia")
+         .style("font-size", 12)
+         .style("text-anchor", "middle")
+         .text("# of Paragraphs per Chapter");
+      
+      plotContainer.append("text")
+         .attr("y", plotVarsMulti.plotMargin / 4)
+         .attr("x", (plotVarsMulti.plotWidth + plotVarsMulti.plotMargin) / 2)
+         .attr("dy", "1em")
+         .style("font-family", "Georgia")
+         .style("font-size", 12)
+         .style("text-anchor", "middle")
+         .text(titles[numId - 1]);
+
+   };
+
+   for(let i=1; i <= nestedDataList.length; i++) {
+      initializeSingleRender(i, nestedDataList[i-1]);
+   }
+});
+
+
+
+
+
+
+
+/*************************************************************************************************/
+/*************************************************************************************************/
+/*************************************************************************************************/
+//TODO: Fix post-deadline, and regret all of your design decisions that let to this DRY violation; then again, is this graphics desk-style practice?
+
+////*HTML button helper, outside d3 file sharing*////
+let selectedKeyword0 = keywordSearch0.value;
+function searchKeywordOnClick0() {
+   selectedKeyword0 = keywordSearch0.value.toLowerCase();
+}
+d3.json("/nested_paragraphs/Austen_Combined_nested_paragraphs.json").then(function(nestedDataList) { 
+
+////*Set-up, constants, global vars, and functions*////   
+   //Temporary until I implement toggle-able switching
+   let selectedVal = document.getElementById("paragraph-chart-dropdown-0").value; //pride_and_prejudice_nested_paragraphs;
+   let nestedData0 = nestedDataList[selectedVal];      
+
+   const plotVarsSingle = ({
+      plotWidth: 960,   // Width of plot region
+      plotHeight: 600,  // Height of plot region
+      plotMargin: 30,   // Margin space for axes and their labels
+      plotMarginLeft: 60   // Margin space for axes and their labels
+   });
+
+   let numChapters0 = 0; //nestedData.length;
+   function getMaxNumParagraphs(nestedDataLocal) {
+      let maxParagraphs = 0;
+      for(let i=0; i < numChapters; i++) {
+         const numParagraphs = nestedDataLocal[i].paragraphs.length;
+         if(maxParagraphs < numParagraphs) {
+            maxParagraphs = numParagraphs;
+         }
+      }
+      return maxParagraphs;
+   }
+   let maxNumParagraphs0 = 130; //found across 6 novels for proper comparison
+
+   let numParagraphsWithKeyword0 = 0;
+   let numKeywordFrequency0 = 0;
+   function containsWord0(paragraph, word) {
+      let regexp = new RegExp(`\\b${word}\\b`, "gi"); //\\b + word + \\b for word + escapes, use global search and i for keyword frequency
+      
+      let paragraphMatches = paragraph.match(regexp);
+      if(paragraphMatches != null) {
+         numKeywordFrequency0 += paragraph.match(regexp).length;
+         return true;
+      }
+      return false;
+   }
+      
+////*Search function*////
+   let keywordSearchBar0 = document.getElementById("keywordSearch0");
+   keywordSearchBar0.addEventListener("keyup", function(event) {
+   // Number 13 is the "Enter" key on the keyboard
+   if (event.keyCode === 13) {
+      event.preventDefault();
+      // Trigger the button element with a click
+      document.getElementById("keywordSearchButton0").click();
+   }
+   });
+
+   d3.select("#keywordSearchButton0").on("click", function() {
+      nestedData0 = nestedDataList[document.getElementById("paragraph-chart-dropdown-0").value];      
+      updateSingleRender(0, nestedData0);
+   });
+
+////*Rendering portion*////
+   function updateSingleRender(numId, nestedDataLocal) {
+      //Redefine constants
+      nestedData0 = nestedDataLocal;
+      numChapters0 = nestedData0.length;
+      let maxNumParagraphs = 130; //Emma chapter 9 with poetry, found across 6 novels for proper comparison
+
+      let xScale0 = d3.scaleLinear(nestedData0)
+        .domain([0, nestedData0.length])
+        .range([plotVarsSingle.plotMarginLeft, plotVarsSingle.plotWidth])
+
+      let yScale0 = d3.scaleLinear(nestedData0)
+        .domain([0, Math.ceil(maxNumParagraphs0/5)*5]) //Round to upper 5 for axis //103 wanted consistency for comparison across different novels, 103 is the max
+        .range([plotVarsSingle.plotMargin, plotVarsSingle.plotHeight - plotVarsSingle.plotMargin]);
+  
+      //Static tick-making and explainers
+      let xAxis0 = d3.axisTop(xScale0);
+      let yAxis0 = d3.axisLeft(yScale0);
+      let yAxisGrid0 = d3.axisLeft(yScale0).tickSize(-(plotVarsSingle.plotWidth + plotVarsSingle.plotMargin/2)).tickFormat("").ticks(15);
+         
+      //Update placeholder svg containers
+      d3.select(`#paragraph-chart-svg-${numId}`).selectAll("*").remove();
+
+      let svgContainer = d3.select(`#paragraph-chart-svg-${numId}`)
+      .attr("width", plotVarsSingle.plotWidth)
+      .attr("height", plotVarsSingle.plotHeight)
+      .style("background-color", "white")
+      .style("border", "1px solid gray")
+      //insert grid lines on mouseover
+      .on("mouseover", function (d, i) {
+            d3.select(`.paragraph-chart-y-axis-grid-${numId}`).transition()
+               .style("opacity", "0.8")
+      })
+      .on("mouseout", function (d, i) {
+            d3.select(`.paragraph-chart-y-axis-grid-${numId}`).transition()
+               .style("opacity", "0")
+      })
+
+      //Add svg data
+      svgContainer.selectAll(".bar-chart-single-rects")
+         .data(nestedData0)
+         .enter()
+         .append("g")
+         .attr("class", "bar-chart-single-rects")
+         .each(function(d, chapterInd) {
+            d3.select(this).selectAll("rect")
+            .data(d.paragraphs)
+            .enter()
+            .append("rect")
+            .attr("x", function() { 
+               return xScale0(chapterInd); 
+            })
+            .attr("y", function(paragraph, parInd) { 
+               return yScale0(parInd);
+            })
+            .attr("rx", 1.5) //rounded corners for "friendly" feeling
+            .attr("ry", 1.5)
+            .attr("height", function(paragraph) { 
+               //let paragraphSize = Math.ceil(paragraph.length / 100) * 100 * 0.0031; //round to nearest 100 words
+               //const heightDividerConstant = plotVarsSingle.plotHeight / (1.2*maxNumParagraphs);
+               return 3; //Math.min(paragraphSize * 0.2 * heightDividerConstant, heightDividerConstant);  
+            })
+            .attr("width", function(paragraph, parInd) { //vertical length of paragraph
+               return plotVarsSingle.plotWidth / (1.2*numChapters0); //add space in-between
+            })
+            .attr("fill", "#d0f0c0")
+         });
+
+      svgContainer.append("g")
+         .selectAll("text.chapter")
+         .data(nestedData0)
+         .join("text")
+         .attr("class", "text-chapter")
+         .attr("x", function(d, chapterInd) { 
+            return xScale0(chapterInd); 
+         })
+         .attr("y", plotVarsSingle.plotMargin - 4)
+         .style("fill", "black")
+         .style("font-family", "Georgia")
+         .style("font-size", 12)
+         .text(function(d) {
+            if(d.chapter === 1 || d.chapter % 5 === 0) {
+               return d.chapter;
+            }
+            return "";
+         });
+      
+      drawTicks(svgContainer, yAxisGrid0, yAxis0, numId);
+
+      //initialize with first word
+      numParagraphsWithKeyword0 = 0;
+      numKeywordFrequency0 = 0;
+      d3.selectAll(".bar-chart-single-rects rect")
+         .attr("fill", function(paragraph) { //d3 still saves the .each binding of each rect to paragraph, gosh I love it when things work 
+            if(containsWord0(paragraph.toLowerCase(), selectedKeyword0)) {
+               numParagraphsWithKeyword0++;
+               return "hotpink";    
+            } else {
+               return "#d0f0c0";
+            }
+         })
+
+      d3.select("#paragraph-chart-paragraphs-with-keyword0")
+         .text(numParagraphsWithKeyword0)
+
+      d3.select("#paragraph-chart-keyword-frequency0")
+         .text(numKeywordFrequency0)
    }
 
+   function drawTicks(plotContainer, yAxisGrid0, yAxis0, numId) {
+      plotContainer.append("g")
+         .attr("class", `paragraph-chart-y-axis-grid-${numId}`)
+         .attr("transform", `translate(${plotVarsSingle.plotMarginLeft - plotVarsSingle.plotMargin/2 }, 0)`)
+         .style("opacity", 0)
+         .call(yAxisGrid0);
+      
+      plotContainer.append("g")
+         .attr("class", `paragraph-chart-y-axis-${numId}`)
+         .attr("transform", `translate(${plotVarsSingle.plotMargin*1.5}, 0)`)
+         .style("font-family", "Georgia")
+         .call(yAxis0);
 
-   for(let i=0; i < nestedDataList.length; i++) {
-      initializeSingleRender(i, nestedDataList[i]);
-   }
+      plotContainer.append("text")
+         .attr("y", plotVarsSingle.plotHeight / 3)
+         .attr("x", 10)
+         .attr("style", "writing-mode: tb; glyph-orientation-vertical: 90")
+         .attr("dy", "1em")
+         .style("font-family", "Georgia")
+         .style("font-size", 12)
+         .style("text-anchor", "middle")
+         .text("# of Paragraphs per Chapter");
+
+   };
+   updateSingleRender(0, nestedDataList[document.getElementById("paragraph-chart-dropdown-0").value]); //start with P&P for sanity check
 });
 
 </script>
