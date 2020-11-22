@@ -1,12 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
-
+# Thanks to JD Porter / Literary Lab in 2019 for help with writing this script!
 import os, io, csv, string, scipy.stats
 
 #variables for this usage
-my_main_directory = "/Users/shanahadi/Documents/Documents/SEH_DRIVE/Stanford/2020-2021_Senior/CS448B/austenmania/corpus/"
-my_metadata_table = "/Users/shanahadi/Documents/Documents/SEH_DRIVE/Stanford/2020-2021_Senior/CS448B/austenmania/Austen_Metadata.csv"
+my_main_directory = f"{os.getcwd()}/corpus/"
+my_metadata_table = f"{os.getcwd()}/Austen_Metadata.csv"
 ofn = my_main_directory + "_mdw.tsv"
 encoding = "utf-8" # text file encoding: utf-8
 
@@ -188,7 +187,7 @@ def dicts2tdm(dictofcountdicts,min_obs=0,no_numbers=False):
 # E.g. instead of columns for "Western" and "Sci-Fi" you'd have "Genre" and list the two types under it for each word
 def tdm_melter(sometdm):
 	old_headers = sometdm[0]
-	melt = [['token_','Corpus','Observations']]
+	melt = [['token_','corpus','observations']]
 	for row in sometdm[1:]:
 		for n,col in enumerate(row[1:],1):
 			ol = [row[0],old_headers[n],row[n]]

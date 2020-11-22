@@ -1,17 +1,11 @@
 <!DOCTYPE html>
 <meta charset="utf-8">
 <meta title="austenmania, viz 1">
-<!--For original raw data processing, overall explanations,
-   and walkthrough up until the actual implementation of the multi-brush (which is below),
-   go to this shared notebook, https://observablehq.com/d/3e49962e0f6fe721.
-   
-   With limited time and more familiarity with html/js than the observable environment, 
-   I pivoted to this standalone version as global vars became increasingly complex.
-   See below for citations!-->
+
 <style>
 
-.grid-background {
-  fill: #eee;
+.y-axis-grid line {
+  stroke: silver !important;
 }
 
 .grid line,
@@ -21,156 +15,213 @@
   shape-rendering: crispEdges;
 }
 
-
-.brush .selection {
-	stroke: #000;
-	fill: rgb(255, 123, 0);
-}
-
 </style>
 
 <body>
-   
+<div>
+   <h3>austenmania</h3>
+</div>
 <script src="https://d3js.org/d3.v6.min.js"></script>
+
+<input type="text" value="marriage" id="keywordSearch">
+<button type="button" id="keywordSearchButton" onclick="searchKeywordOnClick()">Search for a term</button> 
+<div>
+   <p>Paragraphs containing term: <span id="p-num-paragraphs-keyword"></span></p>
+   <p>Overall word frequency:  <span id="p-keyword-frequency"></span>
+</div>
+<!--Note: Needed to place the interactive button / input elements directly before d3 script to work-->
 
 <script>
 
-d3.json("/nested_paragraphs/Austen_PrideAndPrejudice_nested_paragraphs.json").then(function(nestedData) { 
-  
-/*BASIC SET-UP*//////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////
+   ////*HTML button helper, outside d3 file sharing*////
+   let selectedKeyword = keywordSearch.value;
+   function searchKeywordOnClick() {
+      selectedKeyword = keywordSearch.value.toLowerCase();
+   }
+
+d3.json("/nested_paragraphs/Austen_Combined_nested_paragraphs.json").then(function(nestedDataList) { 
+
+////*Set-up, constants, global vars, and functions*////
+   const titles = ["Sense and Sensibility (begun 1795)", "Pride and Prejudice (bg. 1797)", "Northanger Abbey (bg. 1799)", "Mansfield Park (bg. 1811)", "Emma (bg. 1814)", "Persuasion (bg. 1815)"];
+   
+   const sense_and_sensibility_nested_paragraphs = nestedDataList[0];
+   const pride_and_prejudice_nested_paragraphs = nestedDataList[1];
+   const northanger_abbey_nested_paragraphs = nestedDataList[2];
+   const mansfield_park_nested_paragraphs = nestedDataList[3];
+   const emma_nested_paragraphs = nestedDataList[4];
+   const persuasion_nested_paragraphs = nestedDataList[5];
+
+   //Temporary until I implement toggle-able switching
+   let nestedData = pride_and_prejudice_nested_paragraphs;
+
    const plotVars = ({
-      plotWidth: 860,   // Width of plot region
-      plotHeight: 600,  // Height of plot region
-      plotMargin: 60,   // Margin space for axes and their labels
-      plotMarginRight: 100   // Margin space for axes and their labels
+      plotWidth: 1060,   // Width of plot region
+      plotHeight: 1000,  // Height of plot region
+      plotMargin: 30,   // Margin space for axes and their labels
+      plotMarginLeft: 60   // Margin space for axes and their labels
    });
 
-   // let xScale = d3.scaleTime()
-   //    //.domain([new Date("2010-01-01 00:00:00"), new Date("2020-07-1 00:00:00")])
-   //    .domain([new Date('2010-01-01T00:00'), new Date('2020-07-01T00:00')])//d3.extent(top100RawData, d => d.year_month))
-   //    .range([plotVars.plotMargin, plotVars.plotWidth - plotVars.plotMarginRight]/* Using 0 to max width */);
+   const numChapters = nestedData.length;
+   function getMaxNumParagraphs() {
+      let maxParagraphs = 0;
+      for(let i=0; i < numChapters; i++) {
+         const numParagraphs = nestedData[i].paragraphs.length;
+         if(maxParagraphs < numParagraphs) {
+            maxParagraphs = numParagraphs;
+         }
+      }
+      return maxParagraphs;
+   }
+   const maxNumParagraphs = getMaxNumParagraphs();
 
-   // let yScale = d3.scaleLinear()
-   //    .domain([0, 393450])//d3.max(top100RawData, function(d) { return Math.max(d.screen_time_seconds); })]) //We want the max of the screen time in seconds, and we want to start off with 0
-   //    .range([plotVars.plotMargin, plotVars.plotHeight - plotVars.plotMargin].reverse()); // 0 to max height, and don't forget to flip as the origin of the SVG is at top, left
-
-   // let lineGenerator = d3.line()
-   //    .x(d => xScale(new Date(d.year_month))/* Fill in */) // year_month should go on the x-axis, and apparently need to turn into new Date for functionality
-   //    .y(d => yScale(d.screen_time_seconds)/* Fill in */); // screen_time_seconds should go on the y-axis
-
-   // function drawLines(top100Data, plotContainer) {
-   //    plotContainer.append("g")
-   //       .selectAll("path")
-   //       .data(top100Data)
-   //       .join("path")
-   //       .attr("class", "data-line")               // Class name to be able to access the lines later
-   //       .attr("stroke-width", 0.8)
-   //       .attr("d", d => lineGenerator(d.values))  // Use lineGenerator on d.values
-   //       .attr("fill", "none")                     // Do not fill the area defined by the path
-   //       .attr("stroke", d => "gray");   // Set a color for the line (The maps for color is in 'color')
-   //    };
-
-   // function drawNames(top100Data, plotContainer) {
-   //    plotContainer.append("g")
-   //       .selectAll("text.label")
-   //       .data(top100Data)
-   //       .join("text")
-   //       .attr("class", "data-label")
-   //       .attr('x', plotVars.plotWidth - plotVars.plotMarginRight + 3)
-   //       // Place the ticks at the same y position as
-   //       // the last y value of the line (remember, d.va;ues is our array of points)
-   //       .attr('y', d => yScale(d.values[d.values.length - 1].screen_time_seconds))
-   //       .attr('dy', '0.35em')
-   //       .style('fill', d => "gray")
-   //       .style('font-family', 'sans-serif')
-   //       .style('font-size', 12)
-   //       .text(d => d.person)
-   // };
-
-   // function drawTicks(plotContainer) {
-   //    plotContainer.append('g')
-   //       .attr('class', 'x-axis')
-   //       .attr('transform', `translate(0,${ plotVars.plotHeight - plotVars.plotMargin })`)
-   //       .call(xAxis);
+   let numParagraphsWithKeyword = 0;
+   let numKeywordFrequency = 0;
+   function containsWord(paragraph, word) {
+      let regexp = new RegExp(`\\b${word}\\b`, "gi"); //\\b + word + \\b for word + escapes, use global search and i for keyword frequency
       
-   //    plotContainer.append("text")      // text label for the x axis
-   //       .attr("x", plotVars.plotWidth / 2 )
-   //       .attr("y", plotVars.plotHeight - plotVars.plotMargin/3)
-   //       .style('font-family', 'sans-serif')
-   //       .style('font-size', 14)
-   //       .style("text-anchor", "middle")
-   //       .text("Date (in Year-Months)");
+      paragraphMatches = paragraph.match(regexp);
+      if(paragraphMatches != null) {
+         numKeywordFrequency += paragraph.match(regexp).length;
+         return true;
+      }
+      return false;
+   }
 
-   //    plotContainer.append('g')
-   //       .attr('class', 'y-axis')
-   //       .attr('transform', `translate(${ plotVars.plotMargin},0)`)
-   //       .call(yAxis);
-      
-   //    plotContainer.append("text")
-   //       .attr("y", plotVars.plotHeight / 2 )
-   //       .attr("x", 20)
-   //       .attr("style", "writing-mode: tb; glyph-orientation-vertical: 90")
-   //       .attr("dy", "1em")
-   //       .style('font-family', 'sans-serif')
-   //       .style('font-size', 14)
-   //       .style("text-anchor", "middle")
-   //       .text("Screen Time (in Seconds)");
-   // };
+   let xScale = d3.scaleLinear()
+        .domain([0, nestedData.length])
+        .range([plotVars.plotMarginLeft, plotVars.plotWidth])
 
-   // xAxis = d3.axisBottom(xScale);
-   
-   // yAxis = d3.axisLeft(yScale)
-   //       .tickFormat(d => d3.format('~s')(d));
-   // //const formatter = d3.format('~s'); //https://github.com/d3/d3-format/blob/v1.4.2/README.md#locale_format
+   let yScale = d3.scaleLinear()
+        .domain([0, Math.ceil(maxNumParagraphs/5)*5]) //Round to upper 5 for axis //103 wanted consistency for comparison across different novels, 103 is the max
+        .range([plotVars.plotMargin, plotVars.plotHeight - plotVars.plotMargin]);
+  
+////*Search function*////
+   let keywordSearchBar = document.getElementById("keywordSearch");
+   keywordSearchBar.addEventListener("keyup", function(event) {
+   // Number 13 is the "Enter" key on the keyboard
+   if (event.keyCode === 13) {
+      event.preventDefault();
+      // Trigger the button element with a click
+      document.getElementById("keywordSearchButton").click();
+   }
+   });
 
-/*RENDERING PORTION*//////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////
-   let svgContainer = d3.select("body").append("svg")
+   d3.select("#keywordSearchButton").on("click", function() {
+         //reset counters for next search
+         numParagraphsWithKeyword = 0;
+         numKeywordFrequency = 0
+
+         d3.selectAll("rect")
+         .attr("fill", function(paragraph) { //d3 still saves the .each binding of each rect to paragraph, gosh I love it when things work 
+            if(containsWord(paragraph.toLowerCase(), selectedKeyword)) {
+               numParagraphsWithKeyword++;
+               return "hotpink";    
+            } else {
+               return "forestgreen";
+            }
+         })
+
+         d3.select("#p-num-paragraphs-keyword")
+         .text(numParagraphsWithKeyword)
+
+         d3.select("#p-keyword-frequency")
+         .text(numKeywordFrequency)
+   });
+
+////*Rendering portion*////
+   let svgContainer = d3.select("body")
+      .append("svg")
+      .attr("id", "svg1")
       .attr("width", plotVars.plotWidth)
       .attr("height", plotVars.plotHeight)
-      .style("background-color", "whitesmoke");
+      .style("background-color", "white")
+      .style("border", "1px solid gray")
+      //insert grid lines on mouseover
+      .on("mouseover", function (d, i) {
+            d3.select(".y-axis-grid").transition()
+               .style("opacity", "0.8")
+      })
+      .on("mouseout", function (d, i) {
+            d3.select(".y-axis-grid").transition()
+               .style("opacity", "0")
+      })
 
-      svgContainer.selectAll('rect')
+      svgContainer.selectAll("rect")
          .data(nestedData)
          .enter()
-         .append('g')
-         .each(function(d,i) {
-            d3.select(this).selectAll('rect')
+         .append("g")
+         .each(function(d, chapterInd) {
+            d3.select(this).selectAll("rect")
             .data(d.paragraphs)
             .enter()
-            .append('rect')
-            .attr('x', function(d,j) { return j*15; })
-            .attr('y', function() { return i*15; })
-            .attr('width', function() { return 10; })
-            .attr('height', function() { return 10; })
-            .attr('fill', "red")
+            .append("rect")
+            .attr("x", function() { 
+               return xScale(chapterInd); 
+            })
+            .attr("y", function(paragraph, parInd) { 
+               return yScale(parInd);
+            })
+            .attr("rx", 1.5) //rounded corners for "friendly" feeling
+            .attr("ry", 1.5)
+            .attr("height", function(paragraph) { 
+               let paragraphSize = Math.ceil(paragraph.length / 100) * 100 * 0.0031; //round to nearest 100 words
+               const heightDividerConstant = plotVars.plotHeight / (1.2*maxNumParagraphs);
+               return Math.min(paragraphSize * 0.2 * heightDividerConstant, heightDividerConstant);  
+            })
+            .attr("width", function(paragraph, parInd) { //vertical length of paragraph
+               return plotVars.plotWidth / (1.2*numChapters); //add space in-between
+            })
+            .attr("fill", "forestgreen")
          });
 
-         // svgContainer.selectAll('rect')
-         // .data(data)
-         // .enter()
-         // .append('g')
-         // .each(function(d,i) {
-         //    d3.select(this).selectAll('rect')
-         //    .data(d.data)
-         //    .enter()
-         //    .append('rect')
-         //    .attr('x', function(d,j) { return j*100; })
-         //    .attr('y', function() { return i*100; })
-         //    .attr('width', function() { return 90; })
-         //    .attr('height', function() { return 90; })
-         //    .attr('fill', "red")
-         // });
-  
+      svgContainer.append("g")
+         .selectAll("text.chapter")
+         .data(nestedData)
+         .join("text")
+         .attr("class", "text-chapter")
+         .attr("x", function(d, chapterInd) { 
+            return xScale(chapterInd); 
+         })
+         .attr("y", plotVars.plotMargin - 4)
+         .style("fill", "black")
+         .style("font-family", "Georgia")
+         .style("font-size", 13)
+         .text(d => d.chapter);
+   
+////*Static tick-making and explainers*/////
+   const xAxis = d3.axisTop(xScale);
+   const yAxis = d3.axisLeft(yScale);
+   const yAxisGrid = d3.axisLeft(yScale).tickSize(-(plotVars.plotWidth + plotVars.plotMargin/2)).tickFormat("").ticks(15);
+      
+   function drawTicks(plotContainer) {
+      plotContainer.append("g")
+         .attr("class", "y-axis-grid")
+         .attr("transform", `translate(${plotVars.plotMarginLeft - plotVars.plotMargin/2 }, 0)`)
+         .style("opacity", 0)
+         .call(yAxisGrid);
+      
+      plotContainer.append("g")
+         .attr("class", "y-axis")
+         .attr("transform", `translate(${plotVars.plotMargin*1.5}, 0)`)
+         .style("font-family", "Georgia")
+         .call(yAxis);
 
-
-
-
+      plotContainer.append("text")
+         .attr("y", plotVars.plotHeight / 3)
+         .attr("x", 10)
+         .attr("style", "writing-mode: tb; glyph-orientation-vertical: 90")
+         .attr("dy", "1em")
+         .style("font-family", "Georgia")
+         .style("font-size", 16)
+         .style("text-anchor", "middle")
+         .text("# of Paragraphs per Chapter");
+   };
+   
+   drawTicks(svgContainer);
+   
 });
 
 </script>
 
-<div>
-   <h3>austenmania</h3>
-</div>
+</body>
+</html>

@@ -2,11 +2,11 @@ import os, io, csv, json, string
 
 import nltk
 from nltk import *
+from nltk.corpus import stopwords
+cachedStopWords = stopwords.words("english")
 
 #variables for this usage
-my_main_directory = "/Users/shanahadi/Documents/Documents/SEH_DRIVE/Stanford/2020-2021_Senior/CS448B/austenmania/corpus/"
-my_metadata_table = "/Users/shanahadi/Documents/Documents/SEH_DRIVE/Stanford/2020-2021_Senior/CS448B/austenmania/Austen_Metadata.csv"
-ofn = my_main_directory + "_mdw.tsv"
+my_main_directory = f"{os.getcwd()}/corpus/"
 encoding = "utf-8" # text file encoding: utf-8
 
 #bigram generator
@@ -35,7 +35,6 @@ def get_formatted_bigrams(filename):
             if outer_val == nested_bigram_key: #checks against the key
                nested_dict[outer_val] += 1
                not_in_nest = False
-               continue
          if not_in_nest: #else, add another value pair to the nested dict
             nested_dict[outer_val] = 1
 

@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<meta title="austenmania, viz 1">
+
+<style>
+
+.body {
+   font-family: "Georgia";
+}
+
+line {
+  stroke: silver !important;
+}
+
+.grid line,
+.grid path {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+</style>
+
+<body>
+<div>
+   <h3>austenmania</h3>
+</div>
+<script src="https://d3js.org/d3.v6.min.js"></script>
+
+<div>
+   <h3>the line chart section </h3>
+</div>
+
+<script>
+
+d3.json("/character_occurrences/Austen_Combined_character_occurrences.json").then(function(nestedDataList) { 
+
+////*Set-up, constants, global vars, and functions*////
+   const titles = ["Sense and Sensibility (begun 1795)", "Pride and Prejudice (bg. 1797)", "Northanger Abbey (bg. 1799)", "Mansfield Park (bg. 1811)", "Emma (bg. 1814)", "Persuasion (bg. 1815)"];
+   
+   const sense_and_sensibility_char = nestedDataList[0];
+   const pride_and_prejudice_char = nestedDataList[1];
+   const northanger_abbey_char = nestedDataList[2];
+   const mansfield_park_char = nestedDataList[3];
+   const emma_char = nestedDataList[4];
+   const persuasion_char = nestedDataList[5];
+
+   const numLineCharts = 6;
+
+   let nestedData = [];
+
+   const plotVars = ({
+      plotWidth: 750,   // Width of plot region
+      plotHeight: 500,  // Height of plot region
+      plotMargin: 30,   // Margin space for axes and their labels
+      plotMarginLeft: 40,
+      plotMarginRight: 150
+   });
+
+   //i.e. Tableau 10
+   rainbow_colors = ["E15757", "F28E2B", "EDC948", "59A14F", "76B7B2", "4E79A7", "B07AA1", "FF9DA7", "9C755F", "BAB0AC"];
+
+   function initializeSingleRender(numId, nestedDataLocal) {
+      //Redefine constants
+      nestedData = nestedDataLocal;
+      let xScale = d3.scaleLinear(nestedData)
+        .domain([0, nestedData[0].values.length])
+        .range([plotVars.plotMarginLeft, plotVars.plotWidth - plotVars.plotMarginRight])
+
+      let yScale = d3.scaleLinear(nestedData)
+        .domain([0, 60]) //Keep consistent across novels
+        .range([plotVars.plotMargin, plotVars.plotHeight - plotVars.plotMargin].reverse());
+      
+      let lineGenerator = d3.line()
+         .x(values => xScale(values.chapter))
+         .y(values => yScale(values.count)); 
+
+      //Static tick-making and explainers
+      let xAxis = d3.axisBottom(xScale);
+      let yAxis = d3.axisLeft(yScale);
+      let yAxisGrid = d3.axisLeft(yScale).tickSize(-(plotVars.plotWidth) + plotVars.plotMarginRight + plotVars.plotMarginLeft).tickFormat("").ticks(12);
+         
+      //Add svg container
+      let svgContainer = d3.select("body")
+         .append("svg")
+         .attr("id", `line-chart-svg-${numId}`)
+         .attr("width", plotVars.plotWidth)
+         .attr("height", plotVars.plotHeight)
+         .style("background-color", "white")
+         .style("border", "1px solid gray")
+         //insert grid lines on mouseover
+         .on("mouseover", function () {
+               d3.select(`.line-chart-y-axis-grid-${numId}`).transition()
+                  .style("opacity", "0.8")
+         })
+         .on("mouseout", function () {
+               d3.select(`.line-chart-y-axis-grid-${numId}`).transition()
+                  .style("opacity", "0")
+         })
+
+      svgContainer.append("g")
+         .selectAll("path")
+         .data(nestedData)
+         .join("path")
+         .attr("class", "line-chart-path")             
+         .attr("id", function(indiv_char, index) {
+            return `line-chart-path-${numId}-char-${index}`;
+         })
+         .attr("stroke-width", 1.5)
+         .attr("d", indiv_char => lineGenerator(indiv_char.values))
+         .attr("fill", "none")  // Do not fill the area defined by the path
+         .attr("stroke", function(indiv_char, i) {
+            return `#${rainbow_colors[i]}`;// Set a color for the line (The maps for color is in "color")
+         })
+         .style("opacity", function(indiv_char, index) {
+            if(index < 4) {
+               return "1";
+            }
+            return "0.2";
+         })
+         .on("mouseover", function() {
+            d3.select(`.line-chart-y-axis-grid-${numId}`).transition()
+               .style("opacity", "0.8")
+         })
+         .on("mouseout", function() {
+               d3.select(`.line-chart-y-axis-grid-${numId}`).transition()
+                  .style("opacity", "0")
+         }); 
+      
+      //Do some finessing to group rect and text together as "button" labels to interact with the lines
+      //And add an extra rect layer on top for prime clicking without accidentally highlighting the name
+      let nameButtons = svgContainer.selectAll(`.line-chart-${numId}-namegroup`)
+         .data(nestedData)
+         .enter()
+         .append("g")
+         .attr("id", function(indivChar, index) {
+            return `line-chart-${numId}-namegroup-${index}`;
+         })
+         .attr("class", `line-chart-${numId}-namegroup`) //selectify the select all to only get class members
+         .style("opacity", function(indivChar, index) {
+            if(index < 4) {
+               return "1";
+            }
+            return "0.4";
+         })
+         .each(function(indivChar, index) {
+            d3.select(this).append("rect")
+               .attr("x", function() { 
+                  return plotVars.plotWidth - plotVars.plotMarginRight + 3; 
+               })
+               .attr("y", function(indivChar) { 
+                  return (plotVars.plotHeight/3) + index*30 + 15;
+               })
+               .attr("rx", 1.5) //rounded corners for "friendly" feeling
+               .attr("ry", 1.5)
+               .attr("height", 20)
+               .attr("width", 145)
+               .attr("stroke-width", "1px")
+               .attr("stroke", "#C0C0C0")
+               .attr("fill", "#F0F0F0");
+
+            d3.select(this).append("text")
+               .attr("id", function(indivChar) {
+                  `line-chart-${numId}-name-${index}`
+               })
+               .attr("x", function() { 
+                  return plotVars.plotWidth - plotVars.plotMarginRight + 10;
+               })
+               .attr("y", function(indivChar) { 
+                  return (plotVars.plotHeight/3) + index*30 + 15 + 15;// - 2*plotVars.plotMargin;
+               })
+               .style("fill", indivChar => rainbow_colors[index])
+               .style("font-family", "sans-serif")
+               .style("font-family", "Georgia")
+               .style("font-size", 12)
+               .style("font-weight", "bold")
+               .text(function(indivChar) {
+                  return indivChar.name;
+               });
+         
+            //extra layer to cover over text and whole rect for clicking
+            d3.select(this).append("rect")
+               .attr("x", function() { 
+                  return plotVars.plotWidth - plotVars.plotMarginRight + 3; 
+               })
+               .attr("y", function(indivChar) { 
+                  return (plotVars.plotHeight/3) + index*30 + 15;
+               })
+               .attr("rx", 1.5) //rounded corners for "friendly" feeling
+               .attr("ry", 1.5)
+               .attr("height", 20)
+               .attr("width", 145)
+               .attr("opacity", "0")
+               .on("click", function() {
+                  d3.select(`#line-chart-path-${numId}-char-${index}`)
+                     .transition()
+                     .style("opacity", "1")
+                  
+                  d3.select(`#line-chart-${numId}-namegroup-${index}`)
+                     .transition()
+                     .style("opacity", "1")
+               })
+               .on("dblclick", function() {
+                  d3.select(`#line-chart-path-${numId}-char-${index}`)
+                     .transition()
+                     .style("opacity", "0.2")
+                  
+                  d3.select(`#line-chart-${numId}-namegroup-${index}`)
+                     .transition()
+                     .style("opacity", "0.5")
+               });
+         });
+
+      drawTicks(svgContainer, yAxisGrid, yAxis, xAxis, numId);
+   }
+
+   function drawTicks(plotContainer, yAxisGrid, yAxis, xAxis, numId) {
+      plotContainer.append("g")
+         .attr("class", `line-chart-y-axis-grid-${numId}`)
+         .attr("transform", `translate(${plotVars.plotMarginLeft}, 0)`)
+         .style("opacity", 0)
+         .call(yAxisGrid);
+      
+      plotContainer.append("g")
+         .attr("class", `line-chart-y-axis-${numId}`)
+         .attr("transform", `translate(${plotVars.plotMarginLeft}, 0)`) //note chapters start at 1
+         .style("font-family", "Georgia")
+         .call(yAxis);
+      
+      plotContainer.append("g")
+         .attr("class", `line-chart-x-axis-${numId}`)
+         .attr("transform", `translate(0,${ plotVars.plotHeight - plotVars.plotMargin })`)
+         .style("font-family", "Georgia")
+         .call(xAxis);
+
+      plotContainer.append("text")
+         .attr("y", plotVars.plotHeight / 2.5)
+         .attr("x", 10)
+         .attr("style", "writing-mode: tb; glyph-orientation-vertical: 90")
+         .attr("dy", "1em")
+         .style("font-size", 12)
+         .style("text-anchor", "middle")
+         .text("Character Mentions per Chapter");
+      
+      plotContainer.append("text")
+         .attr("y", 10)
+         .attr("x", (plotVars.plotWidth + plotVars.plotMargin) / 2)
+         .attr("dy", "1em")
+         .style("font-size", 16)
+         .style("text-anchor", "middle")
+         .text(function() {
+            title_id = numId - 1;
+            return titles[title_id];
+         });
+      
+      plotContainer.append("text")
+         .attr("x", function() { 
+            return plotVars.plotWidth/2 - plotVars.plotMarginLeft - 8;
+         })
+         .attr("y", function(indivChar) { 
+            return plotVars.plotHeight - plotVars.plotMargin/2;
+         })
+         .attr("dy", "1em")
+         .style("font-size", 12)
+         .style("text-anchor", "middle")
+         .text(function() {
+            return "Novel Chapter";
+         });
+      
+      //Name key on the right
+      plotContainer.append("text")
+         .attr("x", function() { 
+            return plotVars.plotWidth - plotVars.plotMarginRight + 10;
+         })
+         .attr("y", function(indivChar) { 
+            return (plotVars.plotHeight/3 - 20);// - 2*plotVars.plotMargin;
+         })
+         .attr("dy", "1em")
+         .style("font-size", 12)
+         .style("font-weight", "bold")
+         .text(function() {
+            return "Character Names";
+         });
+      
+      //Name key on the right
+      plotContainer.append("text")
+         .attr("x", function() { 
+            return plotVars.plotWidth - plotVars.plotMarginRight + 10;
+         })
+         .attr("y", function(indivChar) { 
+            return (plotVars.plotHeight/3 - 5);// - 2*plotVars.plotMargin;
+         })
+         .attr("dy", "1em")
+         .style("font-size", 11)
+         .text(function() {
+            return "Click 1x to add, 2x to remove.";
+         });
+   };
+
+   for(let i=1; i <= numLineCharts; i++) {
+      initializeSingleRender(i, nestedDataList[i-1]);
+   }
+});
+
+</script>
+
+</body>
+</html>

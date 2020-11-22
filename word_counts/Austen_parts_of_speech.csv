@@ -1,0 +1,121 @@
+text,pos,word,frequency
+Sense and Sensibility,Adjectives,much,173
+Sense and Sensibility,Adjectives,good,171
+Sense and Sensibility,Adjectives,little,151
+Sense and Sensibility,Adjectives,great,149
+Sense and Sensibility,Adjectives,young,103
+Sense and Sensibility,Nouns,time,239
+Sense and Sensibility,Nouns,nothing,189
+Sense and Sensibility,Nouns,thing,185
+Sense and Sensibility,Nouns,sister,163
+Sense and Sensibility,Nouns,house,161
+Sense and Sensibility,Adverbs,well,229
+Sense and Sensibility,Adverbs,never,189
+Sense and Sensibility,Adverbs,soon,181
+Sense and Sensibility,Adverbs,ever,169
+Sense and Sensibility,Adverbs,however,155
+Sense and Sensibility,Verbs,know,170
+Sense and Sensibility,Verbs,think,165
+Sense and Sensibility,Verbs,say,154
+Sense and Sensibility,Verbs,see,126
+Sense and Sensibility,Verbs,make,110
+Pride and Prejudice,Adjectives,much,209
+Pride and Prejudice,Adjectives,good,197
+Pride and Prejudice,Adjectives,little,172
+Pride and Prejudice,Adjectives,great,142
+Pride and Prejudice,Adjectives,young,130
+Pride and Prejudice,Nouns,time,203
+Pride and Prejudice,Nouns,nothing,177
+Pride and Prejudice,Nouns,family,152
+Pride and Prejudice,Nouns,room,150
+Pride and Prejudice,Nouns,man,146
+Pride and Prejudice,Adverbs,well,221
+Pride and Prejudice,Adverbs,never,220
+Pride and Prejudice,Adverbs,soon,216
+Pride and Prejudice,Adverbs,however,134
+Pride and Prejudice,Adverbs,ever,130
+Pride and Prejudice,Verbs,know,177
+Pride and Prejudice,Verbs,think,176
+Pride and Prejudice,Verbs,say,156
+Pride and Prejudice,Verbs,make,137
+Pride and Prejudice,Verbs,go,103
+Northanger Abbey,Adjectives,good,125
+Northanger Abbey,Adjectives,young,104
+Northanger Abbey,Adjectives,much,101
+Northanger Abbey,Adjectives,great,97
+Northanger Abbey,Adjectives,little,91
+Northanger Abbey,Nouns,time,149
+Northanger Abbey,Nouns,room,142
+Northanger Abbey,Nouns,nothing,112
+Northanger Abbey,Nouns,day,91
+Northanger Abbey,Nouns,man,88
+Northanger Abbey,Adverbs,well,163
+Northanger Abbey,Adverbs,never,158
+Northanger Abbey,Adverbs,however,99
+Northanger Abbey,Adverbs,soon,93
+Northanger Abbey,Adverbs,indeed,90
+Northanger Abbey,Verbs,know,122
+Northanger Abbey,Verbs,think,110
+Northanger Abbey,Verbs,say,110
+Northanger Abbey,Verbs,go,107
+Northanger Abbey,Verbs,make,63
+Mansfield Park,Adjectives,good,307
+Mansfield Park,Adjectives,little,285
+Mansfield Park,Adjectives,much,279
+Mansfield Park,Adjectives,great,199
+Mansfield Park,Adjectives,young,154
+Mansfield Park,Nouns,time,316
+Mansfield Park,Nouns,nothing,303
+Mansfield Park,Nouns,room,180
+Mansfield Park,Nouns,house,178
+Mansfield Park,Nouns,day,162
+Mansfield Park,Adverbs,well,316
+Mansfield Park,Adverbs,never,286
+Mansfield Park,Adverbs,soon,222
+Mansfield Park,Adverbs,quite,187
+Mansfield Park,Adverbs,much,179
+Mansfield Park,Verbs,think,288
+Mansfield Park,Verbs,say,204
+Mansfield Park,Verbs,know,177
+Mansfield Park,Verbs,see,164
+Mansfield Park,Verbs,make,151
+Emma,Adjectives,good,348
+Emma,Adjectives,little,326
+Emma,Adjectives,much,302
+Emma,Adjectives,great,265
+Emma,Adjectives,young,192
+Emma,Nouns,thing,398
+Emma,Nouns,time,280
+Emma,Nouns,nothing,256
+Emma,Nouns,man,218
+Emma,Nouns,day,186
+Emma,Adverbs,well,396
+Emma,Adverbs,never,358
+Emma,Adverbs,quite,259
+Emma,Adverbs,always,238
+Emma,Adverbs,soon,224
+Emma,Verbs,think,313
+Emma,Verbs,say,304
+Emma,Verbs,know,265
+Emma,Verbs,see,156
+Emma,Verbs,done,142
+Persuasion,Adjectives,good,177
+Persuasion,Adjectives,little,160
+Persuasion,Adjectives,great,130
+Persuasion,Adjectives,much,114
+Persuasion,Adjectives,last,88
+Persuasion,Nouns,time,152
+Persuasion,Nouns,nothing,139
+Persuasion,Nouns,man,127
+Persuasion,Nouns,house,94
+Persuasion,Nouns,room,82
+Persuasion,Adverbs,well,158
+Persuasion,Adverbs,never,155
+Persuasion,Adverbs,soon,122
+Persuasion,Adverbs,always,110
+Persuasion,Adverbs,quite,99
+Persuasion,Verbs,think,131
+Persuasion,Verbs,know,93
+Persuasion,Verbs,see,92
+Persuasion,Verbs,say,89
+Persuasion,Verbs,go,85
