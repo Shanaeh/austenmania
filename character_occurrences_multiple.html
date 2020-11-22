@@ -4,6 +4,10 @@
 
 <style>
 
+.body {
+   font-family: "Georgia";
+}
+
 line {
   stroke: silver !important;
 }
@@ -26,18 +30,10 @@ line {
 <input type="text" value="marriage" id="keywordSearch">
 <button type="button" id="keywordSearchButton" onclick="searchKeywordOnClick()">Search for a term</button> 
 <div>
-   <p>Paragraphs containing term: <span id="p-num-paragraphs-keyword"></span></p>
-   <p>Overall word frequency:  <span id="p-keyword-frequency"></span>
+   <h3>the line chart section </h3>
 </div>
-<!--Note: Needed to place the interactive button / input elements directly before d3 script to work-->
 
 <script>
-
-   ////*HTML button helper, outside d3 file sharing*////
-   let selectedKeyword = keywordSearch.value;
-   function searchKeywordOnClick() {
-      selectedKeyword = keywordSearch.value.toLowerCase();
-   }
 
 d3.json("/character_occurrences/Austen_Combined_character_occurrences.json").then(function(nestedDataList) { 
 
@@ -56,85 +52,53 @@ d3.json("/character_occurrences/Austen_Combined_character_occurrences.json").the
    let nestedData = [];
 
    const plotVars = ({
-      plotWidth: 630,   // Width of plot region
+      plotWidth: 750,   // Width of plot region
       plotHeight: 500,  // Height of plot region
       plotMargin: 30,   // Margin space for axes and their labels
-      plotMarginLeft: 60   // Margin space for axes and their labels
+      plotMarginLeft: 40,
+      plotMarginRight: 150
    });
 
-   rainbow_colors = ["ff0000", "f57f17", "ffd600", "ide4bd", "19aade", "142459", "7d3ac1", "cc0099", "663300", "ff99ff", "9e9e9e"];
-      
-////*Search function*////
-   let keywordSearchBar = document.getElementById("keywordSearch");
-   keywordSearchBar.addEventListener("keyup", function(event) {
-   // Number 13 is the "Enter" key on the keyboard
-   if (event.keyCode === 13) {
-      event.preventDefault();
-      // Trigger the button element with a click
-      document.getElementById("keywordSearchButton").click();
-   }
-   });
+   //i.e. Tableau 10
+   rainbow_colors = ["E15757", "F28E2B", "EDC948", "59A14F", "76B7B2", "4E79A7", "B07AA1", "FF9DA7", "9C755F", "BAB0AC"];
 
-   d3.select("#keywordSearchButton").on("click", function() {
-         //reset counters for next search
-         numParagraphsWithKeyword = 0;
-         numKeywordFrequency = 0
-
-         d3.selectAll("rect")
-         .attr("fill", function(paragraph) { //d3 still saves the .each binding of each rect to paragraph, gosh I love it when things work 
-            if(containsWord(paragraph.toLowerCase(), selectedKeyword)) {
-               numParagraphsWithKeyword++;
-               return "hotpink";    
-            } else {
-               return "forestgreen";
-            }
-         })
-
-         d3.select("#p-num-paragraphs-keyword")
-         .text(numParagraphsWithKeyword)
-
-         d3.select("#p-keyword-frequency")
-         .text(numKeywordFrequency)
-   });
-
-////*Rendering portion*////
    function initializeSingleRender(numId, nestedDataLocal) {
       //Redefine constants
       nestedData = nestedDataLocal;
       let xScale = d3.scaleLinear(nestedData)
         .domain([0, nestedData[0].values.length])
-        .range([plotVars.plotMargin, plotVars.plotWidth - plotVars.plotMargin])
+        .range([plotVars.plotMarginLeft, plotVars.plotWidth - plotVars.plotMarginRight])
 
       let yScale = d3.scaleLinear(nestedData)
         .domain([0, 60]) //Keep consistent across novels
         .range([plotVars.plotMargin, plotVars.plotHeight - plotVars.plotMargin].reverse());
       
       let lineGenerator = d3.line()
-         .x(values => xScale(values.chapter)/* Fill in */) // year_month should go on the x-axis, and apparently need to turn into new Date for functionality
-         .y(values => yScale(values.count)/* Fill in */); // screen_time_seconds should go on the y-axis
+         .x(values => xScale(values.chapter))
+         .y(values => yScale(values.count)); 
 
       //Static tick-making and explainers
       let xAxis = d3.axisBottom(xScale);
       let yAxis = d3.axisLeft(yScale);
-      let yAxisGrid = d3.axisLeft(yScale).tickSize(-(plotVars.plotWidth + plotVars.plotMargin/2)).tickFormat("").ticks(12);
+      let yAxisGrid = d3.axisLeft(yScale).tickSize(-(plotVars.plotWidth) + plotVars.plotMarginRight + plotVars.plotMarginLeft).tickFormat("").ticks(12);
          
       //Add svg container
       let svgContainer = d3.select("body")
-      .append("svg")
-      .attr("id", `line-chart-svg-${numId}`)
-      .attr("width", plotVars.plotWidth)
-      .attr("height", plotVars.plotHeight)
-      .style("background-color", "white")
-      .style("border", "1px solid gray")
-      //insert grid lines on mouseover
-      .on("mouseover", function (d, i) {
-            d3.select(`.line-chart-y-axis-grid-${numId}`).transition()
-               .style("opacity", "0.8")
-      })
-      .on("mouseout", function (d, i) {
-            d3.select(`.line-chart-y-axis-grid-${numId}`).transition()
-               .style("opacity", "0")
-      })
+         .append("svg")
+         .attr("id", `line-chart-svg-${numId}`)
+         .attr("width", plotVars.plotWidth)
+         .attr("height", plotVars.plotHeight)
+         .style("background-color", "white")
+         .style("border", "1px solid gray")
+         //insert grid lines on mouseover
+         .on("mouseover", function (d, i) {
+               d3.select(`.line-chart-y-axis-grid-${numId}`).transition()
+                  .style("opacity", "0.8")
+         })
+         .on("mouseout", function (d, i) {
+               d3.select(`.line-chart-y-axis-grid-${numId}`).transition()
+                  .style("opacity", "0")
+         })
 
       svgContainer.append("g")
          .selectAll("path")
@@ -144,39 +108,110 @@ d3.json("/character_occurrences/Austen_Combined_character_occurrences.json").the
          .attr("id", function(indiv_char, index) {
             return `line-chart-path-${numId}-char-${index}`;
          })
-         .attr("stroke-width", 1)
+         .attr("stroke-width", 1.5)
          .attr("d", indiv_char => lineGenerator(indiv_char.values))
          .attr("fill", "none")  // Do not fill the area defined by the path
          .attr("stroke", function(indiv_char, i) {
             return `#${rainbow_colors[i]}`;// Set a color for the line (The maps for color is in 'color')
          })
-         .on("mouseover", function (d, i) {
+         .style("opacity", function(indiv_char, index) {
+            if(index < 4) {
+               return "1";
+            }
+            return "0.1";
+         })
+         .on("mouseover", function () {
             d3.select(`.line-chart-y-axis-grid-${numId}`).transition()
                .style("opacity", "0.8")
          })
-         .on("mouseout", function (d, i) {
+         .on("mouseout", function () {
                d3.select(`.line-chart-y-axis-grid-${numId}`).transition()
                   .style("opacity", "0")
          }); 
+      
+      //Do some finessing to group rect and text together as "button" labels to interact with the lines
+      //And add an extra rect layer on top for prime clicking without accidentally highlighting the name
+      let nameButtons = svgContainer.selectAll(`.line-chart-${numId}-namegroup`)
+         .data(nestedData)
+         .enter()
+         .append("g")
+         .attr("id", function(indivChar, index) {
+            return `line-chart-${numId}-namegroup-${index}`;
+         })
+         .attr("class", `line-chart-${numId}-namegroup`) //selectify the select all to only get class members
+         .style("opacity", function(indivChar, index) {
+            if(index < 4) {
+               return "1";
+            }
+            return "0.4";
+         })
+         .each(function(indivChar, index) {
+            d3.select(this).append("rect")
+               .attr("x", function() { 
+                  return plotVars.plotWidth - plotVars.plotMarginRight + 3; 
+               })
+               .attr("y", function(indivChar) { 
+                  return (plotVars.plotHeight/3) + index*30 + 15;
+               })
+               .attr("rx", 1.5) //rounded corners for "friendly" feeling
+               .attr("ry", 1.5)
+               .attr("height", 20)
+               .attr("width", 145)
+               .attr("stroke-width", "1px")
+               .attr("stroke", "#C0C0C0")
+               .attr("fill", "#F0F0F0");
 
-      // svgContainer.append("g")
-      //    .selectAll("text.chapter")
-      //    .data(nestedData)
-      //    .join("text")
-      //    .attr("class", "text-chapter")
-      //    .attr("x", function(d, chapterInd) { 
-      //       return xScale(chapterInd); 
-      //    })
-      //    .attr("y", plotVars.plotMargin - 4)
-      //    .style("fill", "black")
-      //    .style("font-family", "Georgia")
-      //    .style("font-size", 8)
-      //    .text(function(d) {
-      //       if(d.chapter === 1 || d.chapter % 5 === 0) {
-      //          return d.chapter;
-      //       }
-      //       return "";
-      //    });
+            d3.select(this).append("text")
+               .attr("id", function(indivChar) {
+                  `line-chart-${numId}-name-${index}`
+               })
+               .attr("x", function() { 
+                  return plotVars.plotWidth - plotVars.plotMarginRight + 10;
+               })
+               .attr("y", function(indivChar) { 
+                  return (plotVars.plotHeight/3) + index*30 + 15 + 15;// - 2*plotVars.plotMargin;
+               })
+               .style('fill', indivChar => rainbow_colors[index])
+               .style('font-family', 'sans-serif')
+               .style("font-family", "Georgia")
+               .style('font-size', 12)
+               .style("font-weight", "bold")
+               .text(function(indivChar) {
+                  return indivChar.name;
+               });
+         
+            //extra layer to cover over text and whole rect for clicking
+            d3.select(this).append("rect")
+               .attr("x", function() { 
+                  return plotVars.plotWidth - plotVars.plotMarginRight + 3; 
+               })
+               .attr("y", function(indivChar) { 
+                  return (plotVars.plotHeight/3) + index*30 + 15;
+               })
+               .attr("rx", 1.5) //rounded corners for "friendly" feeling
+               .attr("ry", 1.5)
+               .attr("height", 20)
+               .attr("width", 145)
+               .attr("opacity", "0")
+               .on("click", function (d, i) {
+                  d3.select(`#line-chart-path-${numId}-char-${index}`)
+                     .transition()
+                     .style("opacity", "1")
+                  
+                  d3.select(`#line-chart-${numId}-namegroup-${index}`)
+                     .transition()
+                     .style("opacity", "1")
+               })
+               .on("dblclick", function (d, i) {
+                  d3.select(`#line-chart-path-${numId}-char-${index}`)
+                     .transition()
+                     .style("opacity", "0.2")
+                  
+                  d3.select(`#line-chart-${numId}-namegroup-${index}`)
+                     .transition()
+                     .style("opacity", "0.5")
+               });
+         });
 
       drawTicks(svgContainer, yAxisGrid, yAxis, xAxis, numId);
    }
@@ -184,13 +219,13 @@ d3.json("/character_occurrences/Austen_Combined_character_occurrences.json").the
    function drawTicks(plotContainer, yAxisGrid, yAxis, xAxis, numId) {
       plotContainer.append("g")
          .attr("class", `line-chart-y-axis-grid-${numId}`)
-         .attr("transform", `translate(${plotVars.plotMarginLeft - plotVars.plotMargin/2 }, 0)`)
+         .attr("transform", `translate(${plotVars.plotMarginLeft}, 0)`)
          .style("opacity", 0)
          .call(yAxisGrid);
       
       plotContainer.append("g")
          .attr("class", `line-chart-y-axis-${numId}`)
-         .attr("transform", `translate(${plotVars.plotMargin*1.5}, 0)`)
+         .attr("transform", `translate(${plotVars.plotMarginLeft}, 0)`) //note chapters start at 1
          .style("font-family", "Georgia")
          .call(yAxis);
       
@@ -201,25 +236,66 @@ d3.json("/character_occurrences/Austen_Combined_character_occurrences.json").the
          .call(xAxis);
 
       plotContainer.append("text")
-         .attr("y", plotVars.plotHeight / 3)
+         .attr("y", plotVars.plotHeight / 2.5)
          .attr("x", 10)
          .attr("style", "writing-mode: tb; glyph-orientation-vertical: 90")
          .attr("dy", "1em")
-         .style("font-family", "Georgia")
          .style("font-size", 12)
          .style("text-anchor", "middle")
          .text("Character Mentions per Chapter");
       
       plotContainer.append("text")
-         .attr("y", 15)
+         .attr("y", 10)
          .attr("x", (plotVars.plotWidth + plotVars.plotMargin) / 2)
          .attr("dy", "1em")
-         .style("font-family", "Georgia")
          .style("font-size", 16)
          .style("text-anchor", "middle")
          .text(function() {
             title_id = numId - 1;
             return titles[title_id];
+         });
+      
+      plotContainer.append("text")
+         .attr("x", function() { 
+            return plotVars.plotWidth/2 - plotVars.plotMarginLeft - 8;
+         })
+         .attr("y", function(indivChar) { 
+            return plotVars.plotHeight - plotVars.plotMargin/2;
+         })
+         .attr("dy", "1em")
+         .style("font-size", 12)
+         .style("text-anchor", "middle")
+         .text(function() {
+            return "Novel Chapter";
+         });
+      
+      //Name key on the right
+      plotContainer.append("text")
+         .attr("x", function() { 
+            return plotVars.plotWidth - plotVars.plotMarginRight + 10;
+         })
+         .attr("y", function(indivChar) { 
+            return (plotVars.plotHeight/3 - 20);// - 2*plotVars.plotMargin;
+         })
+         .attr("dy", "1em")
+         .style("font-size", 12)
+         .style("font-weight", "bold")
+         .text(function() {
+            return "Character Names";
+         });
+      
+      //Name key on the right
+      plotContainer.append("text")
+         .attr("x", function() { 
+            return plotVars.plotWidth - plotVars.plotMarginRight + 10;
+         })
+         .attr("y", function(indivChar) { 
+            return (plotVars.plotHeight/3 - 5);// - 2*plotVars.plotMargin;
+         })
+         .attr("dy", "1em")
+         .style("font-size", 11)
+         .text(function() {
+            return "Click 1x to add, 2x to remove.";
          });
    };
 
