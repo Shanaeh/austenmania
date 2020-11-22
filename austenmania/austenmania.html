@@ -22,7 +22,7 @@ line {
 }
 
 .paragraph-chart-dropdown-0 {
-   width: 300px;
+   width: 320px;
    font-family: "Georgia";
    font-weight: bold;
    font-size: 20px;
@@ -106,22 +106,86 @@ line {
    width: 90%;
 }
 
+
+[class*="section-"] {
+   padding-bottom: 50px;
+   border-bottom: 2px dotted black;
+}
+
+.explainer-text {
+   font-size: 18px;
+   max-width: 85%;
+   padding-bottom: 6px;
+}
+
 </style>
 
 <body>
 <script src="https://d3js.org/d3.v6.min.js"></script>
 
-<div>
+<div class="explainer-text">
    <h1>austenmania</h1>
+
+   <p>
+      Jane Austen (1775-1817) was an English novelist most active at the turn from the 17th to 18th century.
+      Her six main novels (Sense and Sensibility, Pride and Prejudice, Northanger Abbey, Mansfield Park, Emma, and Persuasion) are beloved by 
+      literary critics and readers for her wry wit, evocative exploration of interiority, marriage plots and women's socio-economic dependence on them, and unforgettable characters. 
+   </p>
+   
+   <p>
+      With my love for Austen’s work and my grounding in computational literary analysis from Stanford's Literary Lab, I wanted to challenge myself in this final project 
+      to “read” Austen’s novels through text-mined data visualizations and digital humanities techniques. 
+      There are already countless analytical essays written on Austen, but here is some data to help explore why.  
+   </p>
+   <p>
+      I have designed three reader-focused interactive visualizations that allow for comparative analysis across Austen's oeuvre. 
+      This project uses "distant reading techniques" (word frequencies, most distinctive words, character mentions) 
+      to approach traditional close readings (analyzing themes, character relationships, diction).
+   </p>
+   <p>
+      I hope this project helps visualizes the architecture of these novels and invites digital humanities enthusiasts, lay readers, and Austen fans to interact with these novels in a "novel" digitally augmented way.
+   </p>
 </div>
 
    <div class="section-1">
+      <div class="explainer-text">     
+         <h2>1) the multi-novel paragraph chart: for initial cross-exploration</h2>
+ 
+         <p>
+            Word frequency searches are usually on the granular level of the single word, but I wondered if this is the 
+            best unit of measurement, especially for narratives where single words are at best indicative of larger themes,
+            and many authors have extensive vocabularies which makes counting for single words quite difficult.
+         </p>
+
+         <p>
+            And rather, contemporary authors like Stephen King "would argue that the paragraph, not the sentence, is the basic unit of writing — the place where coherence begins and words stand a chance of becoming more than mere words."
+            Especially for topic modelling themes (clusters of related words), word frequency doesn't matter as much as context, and paragraphs can be considered "containers" for the main ideas.
+            Hence, this "novel at a glance" shows the number of paragraphs across the novel per chapter, and a paragraph is highlighted if it contains a searched term.
+         </p>
+
+         <p>
+            The term "marriage": Austen is often described popularly as a "romance" author, and while her work all have "marriage plots" (characters who seek spouses), what is significant
+            in her work is how she portrays marriage as not necessarily one filled with "the deepest love" as Pride and Prejudice's Elizabeth Bennet will only marry for,
+            but more of an economic requirement for upperclass women.
+            We see this in Pride and Prejudice's Charlotte Lucas, who willingly marries a "fool" to secure herself and establish her own household instead of staying unmarried at 27 as a "burden to [her] parents."
+            Marriage is often described next to money (from the very first sentence, juxtaposing "possession of a good fortune" with "must be in want of a wife"). 
+            While Elizabeth's desire to marry for love does come true, with five daughters in the household
+            and an entailed estate, her situation could have been dire indeed if she didn't luckily fall in love with Mr. Darcy, who has an income of "10000 pounds a year" (lavish standards for the time).
+         </p>
+         
+         <h4>
+            Instructions
+         </h4>
+         <p>
+            Search additional terms below and see the overall clustering of terms across all 6 novels. (For example, Northanger Abbey focuses on other matters, such as Gothic satire, than commentary on marriages.)
+            Then you can choose to go deeper on the single view, which puts chapters of the novel on the right so you can view the terms in context.
+         </p>
+      </div>
       <input type="text" value="marriage" id="keywordSearch">
       <button type="button" id="keywordSearchButton" onclick="searchKeywordOnClick()">Search again</button> 
       <div>
-         <h3>The multi-novel chart (for initial exploration)</h3>
          <p>Paragraphs containing term: <span id="paragraph-chart-paragraphs-with-keyword"></span></p>
-         <p>Overall word frequency:  <span id="paragraph-chart-keyword-frequency"></span>
+         <p>Overall word frequency: <span id="paragraph-chart-keyword-frequency"></span>
          
          <div class="paragraph-chart-multi-container">
             <svg id="paragraph-chart-svg-1"> </svg>
@@ -132,7 +196,6 @@ line {
             <svg id="paragraph-chart-svg-6"> </svg>
          </div>
          <div>
-            Here's some explanation.
          </div>
 
          <div class="paragraph-chart-container-0">
@@ -145,7 +208,7 @@ line {
                <option value=5>Persuasion</option>
             </select>
             <div>
-               <input type="text" value="love" id="keywordSearch0">
+               <input type="text" value="marriage" id="keywordSearch0">
                <button type="button" id="keywordSearchButton0" onclick="searchKeywordOnClick0()">Search again, or update title</button> 
                <p>Paragraphs containing term: <span id="paragraph-chart-paragraphs-with-keyword0"></span></p>
                <p>Overall word frequency:  <span id="paragraph-chart-keyword-frequency0"></span>   
@@ -155,7 +218,7 @@ line {
                <svg id="paragraph-chart-svg-0"> </svg>
 
                <div class="paragraph-chart-concordance-0-chapter">
-                  <p><i>Click a column on the left to navigate to another chapter. You may need to resize your window to view the full graph.</i></p>
+                  <p><i>NOTE:</i> Click a column on the left to navigate to another chapter. You may need to resize your window to view the full graph.</p>
                   <p>Word frequency in this chapter: <span id="concordance-chapter-keyword-frequency">   </span></p>
                   <h4>Chapter <span id="concordance-chapter-header">1</span></h4>
                   <div id="concordance-chapter-container">
@@ -167,8 +230,35 @@ line {
    </div>
 
    <div class="section-2">
-      <h3>The bar chart section</h3>
-      
+      <div class="explainer-text">     
+         <h2>2) the diverging bar chart: for deeper thematic comparisons</h2>
+ 
+         <p>
+            Searching for word clusters (here: 5 terms) as a placeholder for theme is a tried-and-true model, 
+            as it allows you to gauge how frequently these words are discussed between novels.
+            To account for different novel lengths (from Persuasion's 70k to Mansfield Park's 121k),
+            the bars are measured by term frequency per every 10k words, e.g. "marriage" is mentioned 5.5 times / 10k words vs less than 3 times / 10k words across all 6 novels.
+         </p>
+
+         <p>
+           This set-up allows for a larger comparison of themes across all 6 novels, but the default words
+           are a few that are most distinctive to the particular novels.
+           In 1), marriage, estate, money, letter, and family feature more promimently than the larger corpus, suggesting
+           that there is a stronger discussion of the economic realities of then-contemporary marriages; and of course, 
+           letters that force main characters to change their views, and the quintessential embarrassing family (which separated one couple for a few months).
+           In 2), marriage and engagement are more relevant in Sense and Sensibility with how Elinor's love story is unfortunately complicated by her love interest's "secret engagement" 
+           that he regrets, but feels honor-bound to undertake (which I suppose is evidence that he keeps his word).
+           Meanwhile, Mansfield Park takes place at an estate where Fanny ends up marrying her cousin who will manage a parsonage, so...
+         </p>
+         
+         <h4>
+            Instructions
+         </h4>
+         <p>
+           Select which novels you would like to compare on the left and right dropdown menus, and you can also compare to the whole corpus or each other.
+           Click on the input terms on the center to change them. Click update for a new comparative search when any element is changed.
+         </p>
+      </div>
       <!--I acknowledge that this is not a neat solution, in d3 or html/css; 
          I added 3 diverging bar chart units into html with pre-made svgs to initialize divs +
          to reduce error from integrating search term functionality in the center
@@ -278,14 +368,45 @@ line {
          <svg id="bar-chart-svg-3b"> </svg>
       </div>
    
-   
-   </div>
 
 
    <div class="section-3">
-      <h3>the line chart section </h3>
+      <div class="explainer-text">     
+         <h2>3) the half-opaque line chart: for charting character relationships</h2>
+ 
+         <p>
+           Using character name mentions as a proxy for relevance to that chapter, you can see which 
+           characters are 1) appear in the chapter and 2) co-occur with other names. 
+           Protagonists (the red line, and first name) unsurprisingly have the steadiest lines,
+           along with their love interests and the secondary couples or the "other love interests/foils."
+         </p>
 
+         <p>
+            In Northanger Abbey, Catherine and Eleanor spike in Chapter 28 with how Catherine is unceremoniously thrown out of the house 
+            because she, gasp, does not have very much money and the General wants his son to marry rich; Eleanor, her friend,
+            tries to help Catherine get home with a semblance of dignity.
+            Meanwhile, in Persuasion, we see a significant jump in Chapter 21 with Anne Elliot and William Elliot (would-be love interest),
+            where Anne's old friend reveals that William Elliot is not very charming, nor is he as good a spouse as Anne deserves. 
+            Fascinating how these spikes conveniently occur at the climaxes of the novels... and allow for the romantic wrap-up!
+         </p>
+         
+         <h4>
+            Instructions
+         </h4>
+         <p>
+            Currently the top 4 names (buttons and lines) are visible -- click 1x to add names, and click 2x to remove them.
+         </p>
+      </div>
+      <div class="line-chart-container-div"></div>
    </div>
+
+   <div class="explainer-text">     
+      <h4>
+        Thank you for reading and hopefully interacting with this article. Hopefully this will inspire you to (re)read more Jane Austen! :)
+      </h4>
+   </div>
+   
+</div>
 
 
 <script>
@@ -532,7 +653,7 @@ let selectedKeyword0 = keywordSearch0.value;
 function searchKeywordOnClick0() {
    selectedKeyword0 = keywordSearch0.value.toLowerCase();
 }
-d3.json("/nested_paragraphs/Austen_Combined_nested_paragraphs.json").then(function(nestedDataList) { 
+d3.json("Austen_Combined_nested_paragraphs.json").then(function(nestedDataList) { 
 
 ////*Set-up, constants, global vars, and functions*////   
    //Temporary until I implement toggle-able switching
@@ -1181,7 +1302,7 @@ d3.json("Austen_Combined_character_occurrences.json").then(function(nestedDataLi
       let yAxisGrid = d3.axisLeft(yScale).tickSize(-(plotVars.plotWidth) + plotVars.plotMarginRight + plotVars.plotMarginLeft).tickFormat("").ticks(12);
          
       //Add svg container
-      let svgContainer = d3.select("body")
+      let svgContainer = d3.select(".line-chart-container-div")
          .append("svg")
          .attr("id", `line-chart-svg-${numId}`)
          .attr("width", plotVars.plotWidth)
